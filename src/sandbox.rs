@@ -22,13 +22,10 @@ pub fn wrapper(workspace: &Path) -> Vec<OsString> {
     let mut args: Vec<OsString> = arguments.iter().map(|s| OsString::from(*s)).collect();
     args.push(workspace.as_os_str().to_os_string());
     args.push(OsString::from(SANDBOX_WORKDIR));
+    // With a read-only root, optional mount destinations must already exist.
+    // Many Linux installations do not have /media or /mnt.
+    append_optional_tmpfs_mounts(&mut args, is_real_directory);
     args.extend([
-        OsString::from("--tmpfs"), OsString::from("/var/tmp"),
-        OsString::from("--tmpfs"), OsString::from("/run"),
-        OsString::from("--tmpfs"), OsString::from("/home"),
-        OsString::from("--tmpfs"), OsString::from("/root"),
-        OsString::from("--tmpfs"), OsString::from("/mnt"),
-        OsString::from("--tmpfs"), OsString::from("/media"),
         OsString::from("--chdir"), OsString::from(SANDBOX_WORKDIR),
         OsString::from("--clearenv"),
         OsString::from("--setenv"), OsString::from("HOME"), OsString::from(SANDBOX_WORKDIR),
@@ -36,6 +33,27 @@ pub fn wrapper(workspace: &Path) -> Vec<OsString> {
         OsString::from("--"),
     ]);
     args
+}
+
+const OPTIONAL_MASKS: [&str; 6] = ["/var/tmp", "/run", "/home", "/root", "/mnt", "/media"];
+
+fn is_real_directory(path: &str) -> bool {
+    // Do not attempt to mount over symlinks (e.g. /var/tmp -> /tmp).
+    fs::symlink_metadata(path)
+        .map(|m| m.file_type().is_dir())
+        .unwrap_or(false)
+}
+
+fn append_optional_tmpfs_mounts<F>(args: &mut Vec<OsString>, mut exists: F)
+where
+    F: FnMut(&str) -> bool,
+{
+    for directory in OPTIONAL_MASKS {
+        if exists(directory) {
+            args.push(OsString::from("--tmpfs"));
+            args.push(OsString::from(directory));
+        }
+    }
 }
 
 pub fn copy_tree(source: &Path, target: &Path) -> io::Result<()> {
@@ -97,5 +115,27 @@ mod tests {
         assert!(tmpfs < bind, "private /tmp must exist before the workspace bind");
         assert_eq!(args.get(bind + 2), Some(&OsString::from(SANDBOX_WORKDIR)));
         assert!(!args.contains(&OsString::from("/work")));
+    }
+
+    #[test]
+    fn optional_masks_skip_missing_mountpoints() {
+        // Regression: Manjaro may have no /media and /mnt.
+        let mut args = Vec::new();
+        append_optional_tmpfs_mounts(&mut args, |dir| dir != "/media" && dir != "/mnt");
+        assert!(!args.contains(&OsString::from("/media")));
+        assert!(!args.contains(&OsString::from("/mnt")));
+        assert!(args.windows(2).any(|pair|
+            pair[0] == OsString::from("--tmpfs") &&
+            pair[1] == OsString::from("/home")));
+    }
+
+    #[test]
+    fn optional_masks_include_all_existing_directories() {
+        let mut args = Vec::new();
+        append_optional_tmpfs_mounts(&mut args, |_| true);
+        assert_eq!(args.len(), OPTIONAL_MASKS.len() * 2);
+        assert!(args.windows(2).any(|pair|
+            pair[0] == OsString::from("--tmpfs") &&
+            pair[1] == OsString::from("/media")));
     }
 }
