@@ -10,6 +10,22 @@ ShellTrace est un outil CLI écrit en Rust et distribué sous licence **GPLv3 ou
 
 **2. `sandbox` : essai dans Bubblewrap.** La commande s'exécute avec une racine hôte en lecture seule, un espace `/tmp/shelltrace-work` temporaire en écriture et un espace de noms réseau séparé. Les montages optionnels (par exemple `/media` et `/mnt`) sont ignorés si les répertoires correspondants n’existent pas sur l’hôte. Ce mode dépend des fonctionnalités de noyau disponibles et n'est **pas** une barrière de sécurité certifiée ; utiliser une VM pour les programmes réellement malveillants.
 
+## Interface graphique Qt6
+
+ShellTrace inclut une **interface native Qt6 Widgets**, disponible séparément du moteur Rust. Elle propose le mode sandbox par défaut, une confirmation obligatoire pour le mode hôte, des tableaux et filtres, un tableau de bord, ainsi que l'ouverture et l'enregistrement de rapports JSON. L'interface est en français ou en anglais selon la langue du système.
+
+Sur Manjaro :
+
+```bash
+sudo pacman -S --needed rust strace bubblewrap cmake qt6-base
+cd ~/ShellTrace
+git pull --ff-only
+bash scripts/build-gui.sh
+./build/gui/shelltrace-gui
+```
+
+Documentation détaillée : [GUI Qt6](gui/README.md).
+
 ## Installation
 
 Sur Manjaro/CachyOS :
@@ -44,7 +60,9 @@ Pour essayer une commande dans l'espace de travail isolé :
 - Différences observées dans `--scope` : créations, suppressions, changements de contenu avec SHA-256 et changements de métadonnées.
 - Opérations sur des chemins, sous-processus et sockets remontés par `strace`.
 - Accès à certains chemins sensibles, selon des règles heuristiques.
-- Export JSON structuré pour l'audit et l'automatisation.
+- Export JSON v2 : état `before`/`after` (taille, mode, empreinte SHA-256 si disponible) pour les fichiers modifiés.
+- Origine des appels système : `command`, `sandbox_setup` ou `unknown`. Les événements réseau de type `AF_NETLINK` sont distingués des communications Internet.
+- Affichage CLI plus lisible ; `--verbose` donne les détails et `--no-color` désactive les couleurs.
 
 **Limites :** les opérations tracées peuvent échouer ; les modifications hors périmètre ne figurent pas dans la comparaison ; un résultat SHA-256 peut manquer sur les gros fichiers ; des opérations concurrentes peuvent apparaître dans le diff sans avoir été causées par la commande. Les journaux bruts peuvent exposer des secrets : ne les conserver que si nécessaire.
 

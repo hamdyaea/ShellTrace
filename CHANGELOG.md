@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.0 — 2026-11-13
+
+- Add native Qt6 Widgets graphical desktop application backed by the Rust CLI.
+- Show filesystem changes with structured before/after file size, permissions, target and SHA-256 when available.
+- Add conservative syscall origin classification (`command`, `sandbox_setup`, `unknown`).
+- Distinguish Internet socket operations from AF_NETLINK/kernel IPC and Unix sockets.
+- Improve terminal reports with concise, color-aware status, `--verbose` and `--no-color`.
+- Upgrade JSON schema version to **2** (additive fields; consumers should check the schema version).
+- Expand regression tests, add loopback TCP integration check and Qt6 CI build/smoke tests.
+
+
 ## 0.1.2 — 2026-11-13
 
 - Fix `bwrap: Can\'t create file /media: Read-only file system` on systems without `/media`.

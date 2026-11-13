@@ -25,6 +25,12 @@ If Bubblewrap cannot establish namespaces, ShellTrace will surface the failure; 
 - Tracing has overhead and can alter the timing of the traced command.
 - Even a clean report does not prove a command is safe.
 
+## GUI trust boundaries
+
+The optional Qt6 GUI is a user interface to the Rust CLI; it does not implement a second sandbox. It starts the Rust program via `QProcess` with an argument vector (not a hidden shell), and requires user confirmation before host mode. It stores temporary JSON under a private temporary folder; saved reports may contain secrets. Stopping the tracer does not guarantee that all descendant processes have stopped.
+
+Syscall origin tagging is best-effort: `unknown` never means harmless, and `sandbox_setup` means the event was observed before the target exec rather than proving a trusted process identity. Network `succeeded` is inferred from syscall return; it does not verify application-level delivery.
+
 ## Handling trace evidence
 
 Raw strace output may include secrets, command-line arguments, filenames and addresses. Use `--keep-trace` **only** in a secured directory. JSON reports may include sensitive paths and arguments too. Treat both as confidential. Temporary traces are removed after processing by default, but a crash may leave temporary files behind.

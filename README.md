@@ -23,7 +23,25 @@
 | Network operations | `connect`, `bind`, `listen`, `accept` | Observed socket operations; **not** a packet capture or proof of successful application-layer communication |
 | Sensitive path access | `.ssh`, `.aws`, `.gnupg`, `.kube`, `/etc/shadow`, `.env`, etc. | Heuristic path matching, not a security verdict |
 
+In sandbox mode, ShellTrace attributes successful target `execve` events to the command; syscalls before a confirmed target exec can remain `unknown`. It separates known Bubblewrap setup events, but this is **not a complete parent/child attribution model**. The `AF_NETLINK` bind used by Bubblewrap is classified as kernel IPC, **not** Internet traffic.
+
 ShellTrace does **not** reconstruct operations from unfinished/resumed `strace` lines, intercept kernel-only side effects, see writes to other machines, or inventory all file changes outside `--scope`. Background descendants may outlive the traced leader. Files can change concurrently for unrelated reasons, so a snapshot diff shows **what changed**, not necessarily which process caused it. Tracing is best-effort, not proof of causality.
+
+## Desktop application — Qt6
+
+ShellTrace now includes an **optional native Qt6 Widgets GUI** for people who prefer a visual workflow. It uses the same Rust tracing engine, launches commands asynchronously, and presents a dashboard with changes, processes, networking and sensitive-path events.
+
+On Manjaro / Arch / CachyOS:
+
+```bash
+sudo pacman -S --needed rust strace bubblewrap cmake qt6-base
+git clone https://github.com/hamdyaea/ShellTrace.git
+cd ShellTrace
+bash scripts/build-gui.sh
+./build/gui/shelltrace-gui
+```
+
+The GUI defaults to **Sandbox** and requires confirmation before executing a command on the real host. It supports English and French automatically based on the system locale. See [Qt6 GUI documentation](gui/README.md).
 
 ## Installation
 
@@ -70,7 +88,9 @@ Or use the locally built executable with `./target/release/shelltrace` instead o
 Typical output (illustrative, not a verified run):
 
 ```text
-ShellTrace v0.1.2 | host | exit=0 | 21 ms
+ShellTrace v0.2.0 | host · 21 ms · status 0
+Watched directory: /tmp/shelltrace-demo
+Files  1 created · 0 changed · 0 deleted · 0 uncertain
 Scope: /tmp/shelltrace-demo
 Filesystem diff: 1 changes
   created          new.txt (path appeared)
@@ -107,10 +127,10 @@ shelltrace sandbox --seed ./example-project --json /tmp/try.json -- \
 
 ```text
 shelltrace run [--scope DIR] [--allow-root-scope] [--json FILE]
-               [--keep-trace DIR] [--max-hash-mib N] -- COMMAND [ARG...]
+               [--keep-trace DIR] [--max-hash-mib N] [--verbose] [--no-color] -- COMMAND [ARG...]
 
 shelltrace sandbox [--seed DIR] [--export-workspace NEW_DIR]
-                   [--json FILE] [--keep-trace DIR] [--max-hash-mib N]
+                   [--json FILE] [--keep-trace DIR] [--max-hash-mib N] [--verbose] [--no-color]
                    -- COMMAND [ARG...]
 ```
 
@@ -120,18 +140,32 @@ ShellTrace returns the executed command's exit status (or `1` for program errors
 
 ## JSON output
 
-The stable v1 JSON envelope contains:
+The **v2 JSON envelope** adds `before`/`after` file metadata and conservative `origin` fields on each syscall event. `origin` is `command`, `sandbox_setup` or `unknown`. Network entries include a `category` (`internet`, `local_ipc`, `kernel_ipc`, `unknown`) and `succeeded` (based on syscall return, not remote protocol success). The envelope contains:
 
 ```json
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "mode": "host",
   "started_at_unix": 0,
   "duration_ms": 0,
   "command": ["/bin/true"],
   "scope": "/tmp/shelltrace-demo",
   "exit_code": 0,
-  "filesystem_changes": [],
+  "filesystem_changes": [
+    {
+      "path": "new.txt",
+      "kind": "created",
+      "evidence": "path appeared",
+      "before": null,
+      "after": {
+        "file_type": "file",
+        "size_bytes": 6,
+        "mode": 420,
+        "sha256": null,
+        "symlink_target": null
+      }
+    }
+  ],
   "observations": {
     "filesystem_operations": [],
     "process_events": [],
@@ -144,7 +178,7 @@ The stable v1 JSON envelope contains:
 }
 ```
 
-The example above illustrates the **schema**, not measurements. A trace result's `result` field contains the raw syscall return value; negative/error returns indicate failed attempts. The `filesystem_changes` array contains types such as `created`, `deleted`, `modified`, `metadata_changed`, `possibly_modified`, `type_changed`.
+The example above illustrates the **schema**, not measurements. The octal permission mode `0644` is represented as integer `420` in JSON. `before` and `after` describe metadata/hash snapshots, not backups of file contents. `--verbose` reveals individual command calls; by default the CLI hides most setup noise and displays concise counts. A trace result's `result` field contains the raw syscall return value; negative/error returns indicate failed attempts. The `filesystem_changes` array contains types such as `created`, `deleted`, `modified`, `metadata_changed`, `possibly_modified`, `type_changed`.
 
 ## Develop and contribute
 
