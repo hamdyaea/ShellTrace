@@ -61,7 +61,7 @@ jobs:
   publish:
     name: Publish v0.3.0 assets to GitHub Releases
     needs: deb
-    if: github.event_name == 'push' && contains(github.event.head_commit.message, 'release: v0.3.0')
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[publish-v0.3.0]')
     runs-on: ubuntu-latest
     permissions:
       contents: write
