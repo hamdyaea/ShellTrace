@@ -290,4 +290,3 @@ mod tests {
         assert_eq!(o.filesystem_operations[1].origin, "command");
     }
 }
-}
