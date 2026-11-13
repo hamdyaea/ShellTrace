@@ -1,5 +1,11 @@
 # ShellTrace
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/shelltrace-wordmark-dark.svg">
+  <img src="assets/shelltrace-wordmark-light.svg" width="480" alt="ShellTrace shield logo">
+</picture>
+
+
 **Know what a command really does before you trust it.**
 
 [![CI](https://github.com/hamdyaea/ShellTrace/actions/workflows/ci.yml/badge.svg)](https://github.com/hamdyaea/ShellTrace/actions/workflows/ci.yml)
@@ -49,6 +55,8 @@ bash scripts/install-gui.sh
 
 You can later uninstall with `bash scripts/install-gui.sh --uninstall`.
 
+Appearance: **Dark (default)**, **Light**, or **System**, selectable in the top-right menu. The preference is remembered between sessions. The selected shield badge is used in the window and application launcher.
+
 The GUI defaults to **Sandbox** and requires confirmation before executing a command on the real host. It supports English and French automatically based on the system locale. See [Qt6 GUI documentation](gui/README.md).
 
 ## Installation
@@ -96,7 +104,7 @@ Or use the locally built executable with `./target/release/shelltrace` instead o
 Typical console output (illustrative; exact runtime and operation counts vary):
 
 ```text
-ShellTrace 0.2.0 · Host observation
+ShellTrace 0.3.0 · Host observation
 Watched directory: /tmp/shelltrace-demo
 Files  1 created · 0 changed · 0 deleted · 0 uncertain
 FILES CHANGED (snapshot comparison)
@@ -206,3 +214,7 @@ Licensed under **GNU GPL version 3 or later**. See [LICENSE](LICENSE).
 ## Publishing from a local checkout
 
 The optional helper `bash scripts/publish-github.sh` creates the public `hamdyaea/ShellTrace` repository (if absent) and pushes `main`, provided `git` and an authenticated GitHub CLI (`gh auth login`) are available. It does **not** force-push. Publishing to a repository containing unrelated commits can require a manual merge first.
+
+## Linux distribution packages
+
+Four native `.deb` builds are produced for Debian 12, Debian 13, Ubuntu 24.04 and Ubuntu 26.04. Each one embeds the Qt6 GUI, CLI and shield icon, with runtime dependencies calculated for its own distribution. The `shelltrace-git` AUR build installs the same components on Arch and Manjaro. See [packaging instructions](packaging/README.md).

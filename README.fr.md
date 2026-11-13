@@ -1,5 +1,8 @@
 # ShellTrace — documentation française
 
+![Logo ShellTrace en forme de bouclier](assets/shelltrace-badge.svg)
+
+
 **Comprendre les effets d'une commande Linux avant de lui faire confiance.**
 
 ShellTrace est un outil CLI écrit en Rust et distribué sous licence **GPLv3 ou ultérieure**. Il combine les instantanés du système de fichiers avec l'observation des appels système de `strace` afin de fournir un rapport vérifiable. Son objectif n'est **pas** de promettre une visibilité totale sur toutes les modifications de la machine.
@@ -85,3 +88,9 @@ bash scripts/publish-github.sh
 ```
 
 Le script ne force pas l'écrasement d'une branche distante existante.
+
+## Apparence et paquets Linux
+
+L'interface graphique propose **Sombre**, **Clair** ou **Système** ; le mode **Sombre** est sélectionné par défaut. Ce choix est mémorisé entre les sessions. L'icône est le badge-bouclier retenu.
+
+Les paquets `.deb` pour Debian 12/13 et Ubuntu 24.04/26.04, ainsi que le paquet AUR `shelltrace-git` publiable par SSH, sont décrits dans [packaging/README.md](packaging/README.md).

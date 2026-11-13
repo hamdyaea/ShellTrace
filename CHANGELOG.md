@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0 — 2026-11-13
+
+- Adopt the selected shield badge for app window, launcher and GitHub documentation; ship dark/light wordmark variants.
+- Add persistent Qt6 **Dark / Light / System** appearance selector, with **Dark** as the default.
+- Add source AUR package `shelltrace-git` and SSH publication script for Arch/Manjaro.
+- Build distribution-specific `.deb` packages for Debian 12/13 and Ubuntu 24.04/26.04 through GitHub Actions.
+- Package both Rust CLI and Qt6 GUI with the application icon and license.
+
+
 ## 0.2.0 — 2026-11-13
 
 - Fix GUI installation on Manjaro when old `~/.cargo/bin` shims shadow up-to-date `/usr/bin` Cargo/Rust; display the actual versions used before building.
