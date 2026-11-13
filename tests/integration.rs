@@ -104,7 +104,9 @@ fn host_reports_local_tcp_connection_as_internet_socket_call() {
         "stdout={} stderr={}", String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr));
     let json: serde_json::Value = serde_json::from_slice(&fs::read(&report).unwrap()).unwrap();
-    assert!(json["observations"]["network_events"].as_array().unwrap().iter().any(|e|
+    let events = json["observations"]["network_events"].as_array().unwrap();
+    assert!(events.iter().any(|e|
         e["syscall"] == "connect" && e["category"] == "internet"
-        && e["origin"] == "command" && e["succeeded"] == true));
+        && e["origin"] == "command" && e["succeeded"] == true),
+        "captured network events: {events:?}");
 }
