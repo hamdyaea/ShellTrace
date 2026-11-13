@@ -1,4 +1,6 @@
 #include <QApplication>
+#include <QColor>
+#include <QDebug>
 #include <QCloseEvent>
 #include <QComboBox>
 #include <QDateTime>
@@ -39,6 +41,7 @@
 #include <QTextCursor>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <cmath>
 
 namespace {
 // Native raster rendering of the selected shield emblem. It needs only Qt6
@@ -164,6 +167,7 @@ public:
         setMinimumSize(780, 610);
 
         auto *root = new QWidget(this);
+        root->setObjectName("shelltrace-root");
         auto *layout = new QVBoxLayout(root);
         layout->setContentsMargins(22, 18, 22, 18);
         layout->setSpacing(13);
@@ -185,6 +189,7 @@ public:
         version->setObjectName("eyebrow");
         heading->addWidget(version);
         theme_ = new QComboBox(root);
+        theme_->setObjectName("appearance-selector");
         theme_->setAccessibleName(L("Appearance", "Apparence"));
         theme_->setToolTip(L("Appearance: Dark, Light or System. Dark is the default.",
                              "Apparence : Sombre, Clair ou Système. Sombre par défaut."));
@@ -321,26 +326,6 @@ public:
         setCentralWidget(root);
         statusBar()->showMessage(L("Ready · sandbox is selected by default.", "Prêt · le sandbox est sélectionné par défaut."));
 
-        setStyleSheet(R"STYLE(
-            QLabel#brand { font-size: 29px; font-weight: 760; }
-            QLabel#subtitle { color: palette(mid); font-size: 12px; }
-            QLabel#eyebrow { color: #3789c9; font-size: 10px; font-weight: 700; }
-            QLabel#notice { padding: 10px 13px; border-radius: 8px;
-                            background: palette(alternate-base); border: 1px solid palette(midlight); }
-            QFrame#metric { border: 1px solid palette(midlight); border-radius: 9px;
-                            background: palette(base); }
-            QLabel#metric-value { font-size: 22px; font-weight: bold; color: #2788c7; }
-            QLabel#metric-label { font-size: 11px; color: palette(mid); }
-            QPushButton#primary { font-weight: bold; padding: 8px 19px; color: white;
-                                  background: #1976b9; border: 1px solid #1976b9; border-radius: 6px; }
-            QPushButton#primary:hover { background: #145b8f; }
-            QPushButton#primary:disabled { background: #7f99a8; border-color: #7f99a8; }
-            QGroupBox { font-weight: 650; padding-top: 10px; }
-            QLineEdit { padding: 5px 7px; }
-            QTabWidget::pane { border: 1px solid palette(midlight); }
-            QTabBar::tab { padding: 8px 13px; }
-        )STYLE");
-
         connect(mode_, &QComboBox::currentIndexChanged, this, [this](int) { updateMode(); });
         connect(theme_, &QComboBox::currentIndexChanged, this, [this](int) { applyTheme(); });
         connect(browseExe, &QPushButton::clicked, this, [this] {
@@ -408,35 +393,186 @@ public:
 private:
     void applyTheme() {
         const QString choice = theme_->currentData().toString();
-        QPalette p = systemPalette_;
-        if (choice == "dark" || choice == "light") {
-            const bool dark = choice == "dark";
-            const QColor window(dark ? "#171D29" : "#F4F7FB");
-            const QColor surface(dark ? "#222D3D" : "#FFFFFF");
-            const QColor alternate(dark ? "#2A3547" : "#EAF0F6");
-            const QColor foreground(dark ? "#F3F7FE" : "#182336");
-            const QColor secondary(dark ? "#A9B7CE" : "#526276");
-            const QColor border(dark ? "#45556B" : "#CED8E4");
-            const QColor accent(dark ? "#248FD9" : "#136DAA");
-            p.setColor(QPalette::Window, window);
-            p.setColor(QPalette::WindowText, foreground);
-            p.setColor(QPalette::Base, surface);
-            p.setColor(QPalette::AlternateBase, alternate);
-            p.setColor(QPalette::Text, foreground);
-            p.setColor(QPalette::Button, alternate);
-            p.setColor(QPalette::ButtonText, foreground);
-            p.setColor(QPalette::ToolTipBase, surface);
-            p.setColor(QPalette::ToolTipText, foreground);
-            p.setColor(QPalette::Mid, secondary);
-            p.setColor(QPalette::Midlight, border);
-            p.setColor(QPalette::Highlight, accent);
-            p.setColor(QPalette::HighlightedText, QColor("#FFFFFF"));
-            p.setColor(QPalette::Link, accent);
-            p.setColor(QPalette::PlaceholderText, secondary);
-            p.setColor(QPalette::Disabled, QPalette::Text, secondary);
-            p.setColor(QPalette::Disabled, QPalette::ButtonText, secondary);
+        const bool dark = choice == "dark";
+        const bool light = choice == "light";
+        QPalette palette = systemPalette_;
+        QString qss;
+        if (dark || light) {
+            const QColor window(dark ? "#111827" : "#F3F6FA");
+            const QColor surface(dark ? "#1D293A" : "#FFFFFF");
+            const QColor alternate(dark ? "#26364B" : "#ECF2F8");
+            const QColor foreground(dark ? "#F4F8FF" : "#142235");
+            const QColor secondary(dark ? "#CAD7E8" : "#4E6075");
+            const QColor border(dark ? "#526780" : "#BFCCD9");
+            const QColor accent(dark ? "#8BD8FF" : "#1263A7");
+            const QColor selection(dark ? "#265D98" : "#CBDFF4");
+            const QColor selectedText(dark ? "#FFFFFF" : "#142235");
+            const QColor hover(dark ? "#354A65" : "#DDE8F4");
+            const QColor primary(dark ? "#155D9D" : "#135E9E");
+            const QColor primaryHover(dark ? "#174D84" : "#114C80");
+
+            // Use both an explicit Qt palette (for native dialogs) and
+            // concrete QSS colors (for Fusion/KDE/GTK style engines).
+            palette.setColor(QPalette::Window, window);
+            palette.setColor(QPalette::WindowText, foreground);
+            palette.setColor(QPalette::Base, surface);
+            palette.setColor(QPalette::AlternateBase, alternate);
+            palette.setColor(QPalette::Text, foreground);
+            palette.setColor(QPalette::Button, alternate);
+            palette.setColor(QPalette::ButtonText, foreground);
+            palette.setColor(QPalette::ToolTipBase, surface);
+            palette.setColor(QPalette::ToolTipText, foreground);
+            palette.setColor(QPalette::Mid, secondary);
+            palette.setColor(QPalette::Midlight, border);
+            palette.setColor(QPalette::Highlight, selection);
+            palette.setColor(QPalette::HighlightedText, selectedText);
+            palette.setColor(QPalette::Link, accent);
+            palette.setColor(QPalette::PlaceholderText, secondary);
+            palette.setColor(QPalette::BrightText, foreground);
+            for (auto role : {QPalette::WindowText, QPalette::Text, QPalette::ButtonText}) {
+                palette.setColor(QPalette::Disabled, role, secondary);
+            }
+            palette.setColor(QPalette::Disabled, QPalette::Base, alternate);
+
+            qss = QString::fromUtf8(R"QSS(
+                QMainWindow, QWidget#shelltrace-root {
+                    background-color: @WINDOW@; color: @FG@;
+                }
+                QLabel { color: @FG@; background: transparent; }
+                QLabel#brand { color: @FG@; font-size: 29px; font-weight: 750; }
+                QLabel#subtitle { color: @MUTED@; font-size: 12px; }
+                QLabel#eyebrow { color: @ACCENT@; font-size: 10px; font-weight: 700; }
+                QLabel#notice {
+                    color: @FG@; background-color: @ALT@;
+                    padding: 10px 13px; border-radius: 8px;
+                    border: 1px solid @BORDER@;
+                }
+                QLabel#metric-value { color: @ACCENT@; font-size: 22px; font-weight: bold; }
+                QLabel#metric-label { color: @MUTED@; font-size: 11px; }
+                QFrame#metric {
+                    background-color: @SURFACE@; border: 1px solid @BORDER@;
+                    border-radius: 9px;
+                }
+                QGroupBox {
+                    color: @FG@; font-weight: 650; border: 1px solid @BORDER@;
+                    border-radius: 7px; margin-top: 13px; padding-top: 10px;
+                }
+                QGroupBox::title {
+                    color: @FG@; subcontrol-origin: margin;
+                    subcontrol-position: top left; left: 12px; padding: 0 4px;
+                }
+                QLineEdit, QPlainTextEdit, QComboBox, QTableWidget,
+                QTableView, QAbstractItemView, QMenu, QListView {
+                    background-color: @SURFACE@;
+                    alternate-background-color: @ALT@;
+                    color: @FG@; border: 1px solid @BORDER@;
+                    border-radius: 5px;
+                    selection-background-color: @SELECTION@;
+                    selection-color: @SELECTED_FG@;
+                }
+                QLineEdit, QComboBox { padding: 6px 9px; min-height: 21px; }
+                QPlainTextEdit, QTableWidget { padding: 4px; }
+                QLineEdit:focus, QComboBox:focus, QPlainTextEdit:focus {
+                    border: 2px solid @ACCENT@;
+                }
+                QLineEdit:disabled, QComboBox:disabled {
+                    color: @MUTED@; background-color: @ALT@;
+                }
+                QComboBox QAbstractItemView {
+                    background-color: @SURFACE@; color: @FG@;
+                    alternate-background-color: @ALT@;
+                    selection-background-color: @SELECTION@;
+                    selection-color: @SELECTED_FG@;
+                    border: 1px solid @BORDER@;
+                }
+                QComboBox::drop-down { border: none; width: 22px; }
+                QPushButton {
+                    color: @FG@; background-color: @ALT@;
+                    border: 1px solid @BORDER@; border-radius: 6px;
+                    padding: 7px 13px; min-height: 22px;
+                }
+                QPushButton:hover { color: @FG@; background-color: @HOVER@; }
+                QPushButton:focus { border: 2px solid @ACCENT@; }
+                QPushButton:disabled {
+                    color: @MUTED@; background-color: @ALT@;
+                }
+                QPushButton#primary {
+                    background-color: @PRIMARY@; color: #FFFFFF;
+                    border: 1px solid @PRIMARY@; font-weight: bold;
+                    padding: 8px 19px;
+                }
+                QPushButton#primary:hover {
+                    background-color: @PRIMARY_HOVER@; color: #FFFFFF;
+                }
+                QPushButton#primary:disabled {
+                    background-color: @ALT@; color: @MUTED@;
+                    border: 1px solid @BORDER@;
+                }
+                QTabWidget::pane {
+                    background-color: @SURFACE@; border: 1px solid @BORDER@;
+                }
+                QTabBar::tab {
+                    color: @FG@; background-color: @ALT@;
+                    border: 1px solid @BORDER@; padding: 9px 13px;
+                }
+                QTabBar::tab:selected {
+                    color: @FG@; background-color: @SURFACE@;
+                    border-bottom: 2px solid @ACCENT@;
+                }
+                QTabBar::tab:hover:!selected { background-color: @HOVER@; }
+                QHeaderView::section {
+                    color: @FG@; background-color: @ALT@;
+                    border: 1px solid @BORDER@; padding: 7px;
+                }
+                QTableWidget::item { color: @FG@; }
+                QTableWidget::item:selected {
+                    color: @SELECTED_FG@; background-color: @SELECTION@;
+                }
+                QToolTip {
+                    color: @FG@; background-color: @SURFACE@;
+                    border: 1px solid @BORDER@; padding: 5px;
+                }
+                QStatusBar {
+                    color: @FG@; background-color: @WINDOW@;
+                    border-top: 1px solid @BORDER@;
+                }
+                QProgressBar {
+                    color: @FG@; background-color: @ALT@;
+                    border: 1px solid @BORDER@; border-radius: 3px;
+                }
+                QProgressBar::chunk { background-color: @ACCENT@; }
+            )QSS");
+            const QList<QPair<QString, QString>> values = {
+                {"@WINDOW@", window.name()}, {"@SURFACE@", surface.name()},
+                {"@ALT@", alternate.name()}, {"@FG@", foreground.name()},
+                {"@MUTED@", secondary.name()}, {"@BORDER@", border.name()},
+                {"@ACCENT@", accent.name()}, {"@SELECTION@", selection.name()},
+                {"@SELECTED_FG@", selectedText.name()}, {"@HOVER@", hover.name()},
+                {"@PRIMARY@", primary.name()}, {"@PRIMARY_HOVER@", primaryHover.name()}
+            };
+            for (const auto &value : values) qss.replace(value.first, value.second);
+        } else {
+            // No dark/light color override at all for the System choice.
+            qss = QString::fromUtf8(R"QSS(
+                QLabel#brand { font-size: 29px; font-weight: 750; }
+                QLabel#subtitle { font-size: 12px; }
+                QLabel#eyebrow { font-size: 10px; font-weight: 700; }
+                QLabel#notice { padding: 10px 13px; border-radius: 8px; }
+                QLabel#metric-value { font-size: 22px; font-weight: bold; }
+                QLabel#metric-label { font-size: 11px; }
+                QFrame#metric { border-radius: 9px; }
+                QGroupBox { font-weight: 650; padding-top: 10px; }
+                QLineEdit { padding: 5px 7px; }
+                QTabBar::tab { padding: 8px 13px; }
+                QPushButton#primary { font-weight: bold; padding: 8px 19px; }
+            )QSS");
         }
-        QApplication::setPalette(p);
+
+        // Clear the stale QSS before resetting the palette, otherwise a
+        // switch may leave black text on already-dark popups or controls.
+        QApplication::setStyleSheet(QString());
+        QApplication::setPalette(palette);
+        QApplication::setStyleSheet(qss);
         QSettings().setValue("appearance/theme", choice);
     }
 
