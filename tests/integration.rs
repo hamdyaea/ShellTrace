@@ -28,9 +28,10 @@ fn run_writes_json_with_a_confirmed_file_creation() {
         String::from_utf8_lossy(&output.stdout), String::from_utf8_lossy(&output.stderr));
     let data = fs::read_to_string(report).unwrap();
     let json: serde_json::Value = serde_json::from_str(&data).unwrap();
-    assert_eq!(json["schema_version"], 1);
+    assert_eq!(json["schema_version"], 2);
     let changes = json["filesystem_changes"].as_array().unwrap();
-    assert!(changes.iter().any(|c| c["path"] == "created.txt" && c["kind"] == "created"));
+    assert!(changes.iter().any(|c| c["path"] == "created.txt" && c["kind"] == "created"
+        && c["before"].is_null() && c["after"]["size_bytes"] == 4));
 }
 
 #[test]
@@ -74,4 +75,36 @@ fn sandbox_creates_file_in_private_workspace() {
         .iter().any(|c| c["path"] == "regression-workspace.txt" && c["kind"] == "created"));
     assert!(!host.path().join("regression-workspace.txt").exists(),
         "sandbox workspace leaked into the host current directory");
+}
+
+
+#[test]
+fn host_reports_local_tcp_connection_as_internet_socket_call() {
+    use std::net::TcpListener;
+    // Network integration check uses loopback only, no Internet activity.
+    if Command::new("python3").arg("--version").output().is_err() ||
+       Command::new("strace").arg("-V").output().is_err() {
+        eprintln!("skipping local-network test: python3 or strace unavailable");
+        return;
+    }
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let port = listener.local_addr().unwrap().port();
+    let dir = tempfile::tempdir().unwrap();
+    let report = dir.path().join("network.json");
+    let script = format!(
+        "import socket; s=socket.socket(); s.settimeout(2); s.connect(('127.0.0.1',{})); s.close()",
+        port
+    );
+    let output = Command::new(env!("CARGO_BIN_EXE_shelltrace"))
+        .arg("run").arg("--scope").arg(dir.path())
+        .arg("--json").arg(&report)
+        .arg("--").arg("python3").arg("-c").arg(script)
+        .output().unwrap();
+    assert!(output.status.success(),
+        "stdout={} stderr={}", String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr));
+    let json: serde_json::Value = serde_json::from_slice(&fs::read(&report).unwrap()).unwrap();
+    assert!(json["observations"]["network_events"].as_array().unwrap().iter().any(|e|
+        e["syscall"] == "connect" && e["category"] == "internet"
+        && e["origin"] == "command" && e["succeeded"] == true));
 }

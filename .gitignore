@@ -4,3 +4,4 @@
 .DS_Store
 .shelltrace/
 # Cargo.lock should be committed for released binary applications once generated.
+/build/
