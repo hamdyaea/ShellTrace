@@ -24,6 +24,14 @@ bash scripts/build-gui.sh
 ./build/gui/shelltrace-gui
 ```
 
+Pour installer également l'application dans le menu Linux, sans privilèges administrateur :
+
+```bash
+bash scripts/install-gui.sh
+```
+
+Pour la désinstaller : `bash scripts/install-gui.sh --uninstall`.
+
 Documentation détaillée : [GUI Qt6](gui/README.md).
 
 ## Installation

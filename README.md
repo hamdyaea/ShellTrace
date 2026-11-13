@@ -41,6 +41,14 @@ bash scripts/build-gui.sh
 ./build/gui/shelltrace-gui
 ```
 
+For a launcher in the application menu, install both executables into your user profile (no sudo):
+
+```bash
+bash scripts/install-gui.sh
+```
+
+You can later uninstall with `bash scripts/install-gui.sh --uninstall`.
+
 The GUI defaults to **Sandbox** and requires confirmation before executing a command on the real host. It supports English and French automatically based on the system locale. See [Qt6 GUI documentation](gui/README.md).
 
 ## Installation
@@ -60,7 +68,7 @@ sudo apt update
 sudo apt install cargo rustc strace bubblewrap
 ```
 
-> Rust **1.76+** is required by the manifest; distribution `cargo` packages may be older. Use rustup where needed.
+> Rust **1.85+** is required by the manifest; distribution `cargo` packages may be older. Use rustup where needed.
 
 Build from source:
 
@@ -85,17 +93,15 @@ shelltrace run \
 
 Or use the locally built executable with `./target/release/shelltrace` instead of `shelltrace`. **Commands in `run` mode are executed for real.**
 
-Typical output (illustrative, not a verified run):
+Typical console output (illustrative; exact runtime and operation counts vary):
 
 ```text
-ShellTrace v0.2.0 | host · 21 ms · status 0
+ShellTrace 0.2.0 · Host observation
 Watched directory: /tmp/shelltrace-demo
 Files  1 created · 0 changed · 0 deleted · 0 uncertain
-Scope: /tmp/shelltrace-demo
-Filesystem diff: 1 changes
-  created          new.txt (path appeared)
-Syscall observations: 1 filesystem operations, 1 process events, 0 network events, 0 sensitive accesses
-JSON report: /tmp/shelltrace-report.json
+FILES CHANGED (snapshot comparison)
+  + created  new.txt
+    after: file 6 B mode=0644 sha256=...
 ```
 
 ## Quick start — sandbox trial

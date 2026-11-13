@@ -2,7 +2,7 @@
 
 ## 0.2.0 — 2026-11-13
 
-- Add native Qt6 Widgets graphical desktop application backed by the Rust CLI.
+- Add native Qt6 Widgets graphical desktop application backed by the Rust CLI, plus a per-user application-menu installer.
 - Show filesystem changes with structured before/after file size, permissions, target and SHA-256 when available.
 - Add conservative syscall origin classification (`command`, `sandbox_setup`, `unknown`).
 - Distinguish Internet socket operations from AF_NETLINK/kernel IPC and Unix sockets.

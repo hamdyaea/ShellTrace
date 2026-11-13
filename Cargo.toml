@@ -9,7 +9,7 @@ repository = "https://github.com/hamdyaea/ShellTrace"
 readme = "README.md"
 keywords = ["linux", "strace", "forensics", "security", "observability"]
 categories = ["command-line-utilities", "development-tools::debugging"]
-rust-version = "1.76"
+rust-version = "1.85"
 
 [dependencies]
 clap = { version = "4.5", features = ["derive"] }

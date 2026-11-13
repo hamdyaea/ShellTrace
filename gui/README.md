@@ -35,6 +35,20 @@ cmake --build build/gui --parallel
 
 Your distribution's Rust version must be recent enough for the locked dependencies; use a newer toolchain if required.
 
+## Install in the Linux application menu
+
+After installing Qt6 dependencies:
+
+```bash
+bash scripts/install-gui.sh
+```
+
+This builds the Rust engine and GUI and installs both under `~/.local/bin` plus an application menu entry under `~/.local/share/applications`. No root privileges are needed. To remove:
+
+```bash
+bash scripts/install-gui.sh --uninstall
+```
+
 ## Usage
 
 Leave **Sandbox** selected to test a command without granting it normal host write access. The example uses `/bin/sh` and an explicit `-c "echo ShellTrace > gui-demo.txt"` argument. `QProcess` passes an argument vector and does not insert an implicit shell. Host mode actually modifies the host, possibly outside the watched directory.
