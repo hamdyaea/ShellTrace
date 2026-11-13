@@ -58,9 +58,39 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
+  aur:
+    name: Build AUR package on Arch Linux
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install AUR build dependencies
+        run: |
+          pacman -Syu --noconfirm --needed git cmake rust qt6-base strace bubblewrap
+          useradd --create-home aurbuilder
+          chown -R aurbuilder:aurbuilder "$GITHUB_WORKSPACE"
+      - name: Check PKGBUILD syntax
+        shell: bash
+        run: |
+          bash -n packaging/aur/PKGBUILD packaging/aur/publish-aur.sh
+          cd packaging/aur
+          runuser -u aurbuilder -- makepkg --printsrcinfo
+      - name: Build from upstream Git
+        shell: bash
+        run: |
+          cd packaging/aur
+          runuser -u aurbuilder -- makepkg --noconfirm --nodeps --force
+          pacman -Qip shelltrace-git-*.pkg.tar.zst
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shelltrace-arch-vcs-x86_64
+          path: packaging/aur/*.pkg.tar.zst
+          if-no-files-found: error
+          retention-days: 30
+
   publish:
     name: Publish v0.3.0 assets to GitHub Releases
-    needs: deb
+    needs: [deb, aur]
     if: github.event_name == 'push' && contains(github.event.head_commit.message, '[publish-v0.3.0]')
     runs-on: ubuntu-latest
     permissions:
