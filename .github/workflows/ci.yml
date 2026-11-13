@@ -23,8 +23,8 @@ jobs:
       - name: Clippy
         run: cargo clippy --all-targets -- -D warnings
       - name: Install integration-test dependency
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq strace
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq strace bubblewrap
       - name: Tests
-        run: cargo test --all-targets
+        run: cargo test --all-targets -- --nocapture
       - name: Release build
         run: cargo build --release
