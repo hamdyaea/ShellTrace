@@ -70,7 +70,7 @@ Or use the locally built executable with `./target/release/shelltrace` instead o
 Typical output (illustrative, not a verified run):
 
 ```text
-ShellTrace v0.1.1 | host | exit=0 | 21 ms
+ShellTrace v0.1.2 | host | exit=0 | 21 ms
 Scope: /tmp/shelltrace-demo
 Filesystem diff: 1 changes
   created          new.txt (path appeared)
@@ -97,6 +97,7 @@ shelltrace sandbox --seed ./example-project --json /tmp/try.json -- \
 - `/tmp/shelltrace-work` is writable and its contents are inspected after the command finishes.
 - The shell's cwd is `/tmp/shelltrace-work`. Absolute paths from the host may exist read-only inside the sandbox, with selected sensitive directories masked.
 - Network namespaces are separated. The command usually cannot reach external networks.
+- Optional sandbox masks (for example `/media` and `/mnt`) are mounted only if those directories exist on the host. Missing mount targets are skipped rather than triggering a Bubblewrap failure.
 - The sandbox can fail where user namespaces, mount namespaces, or ptrace are disallowed. Failures are not silently bypassed.
 - Exporting a workspace is optional; `--export-workspace` must point to a **new directory**.
 

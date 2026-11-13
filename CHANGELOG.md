@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.2 — 2026-11-13
+
+- Fix `bwrap: Can\'t create file /media: Read-only file system` on systems without `/media`.
+- Skip optional Bubblewrap tmpfs mounts unless their destination exists as an actual directory in the host root.
+- Add regression tests for missing optional mount directories.
+- Commit `Cargo.lock` for reproducible builds.
+
+
 ## 0.1.1 — 2026-11-13
 
 - Fix the sandbox workspace mount failure on read-only root (Bubblewrap error: `Can't create file /work: Read-only file system`).

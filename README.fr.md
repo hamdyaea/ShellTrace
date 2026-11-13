@@ -8,7 +8,7 @@ ShellTrace est un outil CLI écrit en Rust et distribué sous licence **GPLv3 ou
 
 **1. `run` : observation sur le système réel.** La commande est réellement exécutée, avec les droits de l'utilisateur. Toute modification, suppression ou connexion réseau est possible ; la comparaison des fichiers est limitée au répertoire indiqué par `--scope`.
 
-**2. `sandbox` : essai dans Bubblewrap.** La commande s'exécute avec une racine hôte en lecture seule, un espace `/tmp/shelltrace-work` temporaire en écriture et un espace de noms réseau séparé. Ce mode dépend des fonctionnalités de noyau disponibles et n'est **pas** une barrière de sécurité certifiée ; utiliser une VM pour les programmes réellement malveillants.
+**2. `sandbox` : essai dans Bubblewrap.** La commande s'exécute avec une racine hôte en lecture seule, un espace `/tmp/shelltrace-work` temporaire en écriture et un espace de noms réseau séparé. Les montages optionnels (par exemple `/media` et `/mnt`) sont ignorés si les répertoires correspondants n’existent pas sur l’hôte. Ce mode dépend des fonctionnalités de noyau disponibles et n'est **pas** une barrière de sécurité certifiée ; utiliser une VM pour les programmes réellement malveillants.
 
 ## Installation
 
