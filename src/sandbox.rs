@@ -12,15 +12,21 @@ pub fn wrapper(workspace: &Path) -> Vec<OsString> {
     let arguments = [
         "bwrap", "--die-with-parent", "--new-session", "--unshare-all",
         "--ro-bind", "/", "/", "--dev", "/dev", "--proc", "/proc",
-        "--tmpfs", "/tmp", "--tmpfs", "/var/tmp", "--tmpfs", "/run",
-        "--tmpfs", "/home", "--tmpfs", "/root", "--tmpfs", "/mnt",
-        "--tmpfs", "/media", "--dir", "/work",
-        "--bind",
+        // Bind /work before masking /tmp: tempdir() creates its source there.
+        "--dir", "/work", "--bind",
     ];
     let mut args: Vec<OsString> = arguments.iter().map(|s| OsString::from(*s)).collect();
     args.push(workspace.as_os_str().to_os_string());
     args.extend([
-        OsString::from("/work"), OsString::from("--chdir"), OsString::from("/work"),
+        OsString::from("/work"),
+        OsString::from("--tmpfs"), OsString::from("/tmp"),
+        OsString::from("--tmpfs"), OsString::from("/var/tmp"),
+        OsString::from("--tmpfs"), OsString::from("/run"),
+        OsString::from("--tmpfs"), OsString::from("/home"),
+        OsString::from("--tmpfs"), OsString::from("/root"),
+        OsString::from("--tmpfs"), OsString::from("/mnt"),
+        OsString::from("--tmpfs"), OsString::from("/media"),
+        OsString::from("--chdir"), OsString::from("/work"),
         OsString::from("--clearenv"),
         OsString::from("--setenv"), OsString::from("HOME"), OsString::from("/work"),
         OsString::from("--setenv"), OsString::from("PATH"), OsString::from("/usr/local/bin:/usr/bin:/bin"),
@@ -83,5 +89,8 @@ mod tests {
         let args = wrapper(Path::new("/tmp/test"));
         assert!(args.contains(&OsString::from("--unshare-all")));
         assert!(args.contains(&OsString::from("--ro-bind")));
+        let bind = args.iter().position(|a| a == "--bind").unwrap();
+        let tmpfs = args.iter().position(|a| a == "--tmpfs").unwrap();
+        assert!(bind < tmpfs, "workspace must be bound before /tmp is masked");
     }
 }
