@@ -570,9 +570,9 @@ private:
 
         // Clear the stale QSS before resetting the palette, otherwise a
         // switch may leave black text on already-dark popups or controls.
-        QApplication::setStyleSheet(QString());
+        qApp->setStyleSheet(QString());
         QApplication::setPalette(palette);
-        QApplication::setStyleSheet(qss);
+        qApp->setStyleSheet(qss);
         QSettings().setValue("appearance/theme", choice);
     }
 
