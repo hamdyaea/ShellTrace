@@ -1,0 +1,30 @@
+name: Rust CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Format, Clippy, Test, Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Format source for CI
+        run: cargo fmt --all
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+      - name: Install integration-test dependency
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq strace
+      - name: Tests
+        run: cargo test --all-targets
+      - name: Release build
+        run: cargo build --release
