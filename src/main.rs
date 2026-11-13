@@ -102,7 +102,7 @@ fn execute(cli: Cli) -> Result<i32, String> {
             }
             let mut wrapper = sandbox::wrapper(work.path());
             wrapper.extend(opts.common.command.iter().cloned());
-            let result = run_trace("sandbox", work.path(), &opts.common, &wrapper, Some("/work"));
+            let result = run_trace("sandbox", work.path(), &opts.common, &wrapper, Some(sandbox::SANDBOX_WORKDIR));
             if let Some(dst) = &opts.export_workspace {
                 sandbox::export_tree(work.path(), dst)
                     .map_err(|e| format!("--export-workspace: {e}"))?;
@@ -178,7 +178,7 @@ fn run_trace(
     warnings.extend(trace_warnings);
     if mode == "sandbox" {
         warnings.push("Bubblewrap reduces host-write exposure, but is NOT a hardened security boundary; the read-only host root remains visible, and namespace support varies".to_string());
-        warnings.push("Sandbox snapshot covers only /work; tmpfs writes elsewhere are not included in the filesystem diff".into());
+        warnings.push(format!("Sandbox snapshot covers only {}; tmpfs writes elsewhere are not included in the filesystem diff", sandbox::SANDBOX_WORKDIR));
     } else {
         warnings.push("Host execution is NOT isolated: the command may modify files outside --scope or make network connections".into());
     }

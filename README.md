@@ -10,7 +10,7 @@
 **Two execution modes:**
 
 - **`run` — observe on the actual host.** The command runs with your normal privileges and can **modify the host**. Before/after comparisons cover a directory you choose, while tracing can reveal paths referenced outside it.
-- **`sandbox` — trial execution using Bubblewrap.** Runs in a separate namespace, with a read-only bind of the host root, a writable ephemeral `/work`, no shared network namespace, and masked home/runtime mount points. Not a hardened security boundary or a guarantee against all side effects.
+- **`sandbox` — trial execution using Bubblewrap.** Runs in a separate namespace, with a read-only bind of the host root, a writable ephemeral `/tmp/shelltrace-work`, no shared network namespace, and masked home/runtime mount points. Not a hardened security boundary or a guarantee against all side effects.
 
 ## What ShellTrace reports
 
@@ -70,7 +70,7 @@ Or use the locally built executable with `./target/release/shelltrace` instead o
 Typical output (illustrative, not a verified run):
 
 ```text
-ShellTrace v0.1.0 | host | exit=0 | 21 ms
+ShellTrace v0.1.1 | host | exit=0 | 21 ms
 Scope: /tmp/shelltrace-demo
 Filesystem diff: 1 changes
   created          new.txt (path appeared)
@@ -94,8 +94,8 @@ shelltrace sandbox --seed ./example-project --json /tmp/try.json -- \
   /bin/sh -c 'echo changed > result.txt'
 ```
 
-- `/work` is writable and its contents are inspected after the command finishes.
-- The shell's cwd is `/work`. Absolute paths from the host may exist read-only inside the sandbox, with selected sensitive directories masked.
+- `/tmp/shelltrace-work` is writable and its contents are inspected after the command finishes.
+- The shell's cwd is `/tmp/shelltrace-work`. Absolute paths from the host may exist read-only inside the sandbox, with selected sensitive directories masked.
 - Network namespaces are separated. The command usually cannot reach external networks.
 - The sandbox can fail where user namespaces, mount namespaces, or ptrace are disallowed. Failures are not silently bypassed.
 - Exporting a workspace is optional; `--export-workspace` must point to a **new directory**.

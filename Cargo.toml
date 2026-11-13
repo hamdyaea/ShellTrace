@@ -1,6 +1,6 @@
 [package]
 name = "shelltrace"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Hamdy Abou El Anein"]
 description = "Evidence-based Linux command tracing with filesystem snapshots and optional sandbox execution"

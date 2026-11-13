@@ -5,30 +5,33 @@ use std::os::unix::fs::{symlink, PermissionsExt};
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
+/// The sandbox's writable mount point. A child of private /tmp avoids
+/// creating /work under an otherwise read-only host-root bind mount.
+pub const SANDBOX_WORKDIR: &str = "/tmp/shelltrace-work";
+
 pub fn wrapper(workspace: &Path) -> Vec<OsString> {
-    // Sandboxed by bubblewrap; trace via outer strace so namespace setup is visible.
-    // / is read-only, while /work and selected tmpfs mounts are writable.
-    // /home, /root, /run and /mnt are masked to limit access to user data/sockets.
+    // The host root is read-only. /tmp exists on normal Linux systems,
+    // so mounting a private tmpfs on it gives bwrap a writable parent
+    // where it can create the destination for the workspace bind.
+    // Do not create /work directly under the read-only root (EROFS).
     let arguments = [
         "bwrap", "--die-with-parent", "--new-session", "--unshare-all",
         "--ro-bind", "/", "/", "--dev", "/dev", "--proc", "/proc",
-        // Bind /work before masking /tmp: tempdir() creates its source there.
-        "--dir", "/work", "--bind",
+        "--tmpfs", "/tmp", "--bind",
     ];
     let mut args: Vec<OsString> = arguments.iter().map(|s| OsString::from(*s)).collect();
     args.push(workspace.as_os_str().to_os_string());
+    args.push(OsString::from(SANDBOX_WORKDIR));
     args.extend([
-        OsString::from("/work"),
-        OsString::from("--tmpfs"), OsString::from("/tmp"),
         OsString::from("--tmpfs"), OsString::from("/var/tmp"),
         OsString::from("--tmpfs"), OsString::from("/run"),
         OsString::from("--tmpfs"), OsString::from("/home"),
         OsString::from("--tmpfs"), OsString::from("/root"),
         OsString::from("--tmpfs"), OsString::from("/mnt"),
         OsString::from("--tmpfs"), OsString::from("/media"),
-        OsString::from("--chdir"), OsString::from("/work"),
+        OsString::from("--chdir"), OsString::from(SANDBOX_WORKDIR),
         OsString::from("--clearenv"),
-        OsString::from("--setenv"), OsString::from("HOME"), OsString::from("/work"),
+        OsString::from("--setenv"), OsString::from("HOME"), OsString::from(SANDBOX_WORKDIR),
         OsString::from("--setenv"), OsString::from("PATH"), OsString::from("/usr/local/bin:/usr/bin:/bin"),
         OsString::from("--"),
     ]);
@@ -91,6 +94,8 @@ mod tests {
         assert!(args.contains(&OsString::from("--ro-bind")));
         let bind = args.iter().position(|a| a == "--bind").unwrap();
         let tmpfs = args.iter().position(|a| a == "--tmpfs").unwrap();
-        assert!(bind < tmpfs, "workspace must be bound before /tmp is masked");
+        assert!(tmpfs < bind, "private /tmp must exist before the workspace bind");
+        assert_eq!(args.get(bind + 2), Some(&OsString::from(SANDBOX_WORKDIR)));
+        assert!(!args.contains(&OsString::from("/work")));
     }
 }

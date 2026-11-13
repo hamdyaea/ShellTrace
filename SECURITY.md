@@ -8,7 +8,7 @@ ShellTrace is a **diagnostic and forensic-assistance tool**, not a security moni
 
 ## Sandbox mode
 
-`sandbox` depends on Bubblewrap and Linux namespace behavior. The host's root filesystem is bind-mounted read-only, selected paths (`/home`, `/root`, `/run`, `/mnt`, `/media`) are masked, and `/work` is writable. The network namespace is unshared; this does not guarantee all forms of local IPC or side effects are blocked. It deliberately does **not** implement a default seccomp syscall policy, and the host root still exposes data outside the masked directories. Paths such as `/etc`, `/opt`, `/srv` and `/var` may remain readable. There is no defense against kernel exploits, resource exhaustion, or malicious logic using unfiltered interfaces.
+`sandbox` depends on Bubblewrap and Linux namespace behavior. The host's root filesystem is bind-mounted read-only, selected paths (`/home`, `/root`, `/run`, `/mnt`, `/media`) are masked, and `/tmp/shelltrace-work` is writable. The network namespace is unshared; this does not guarantee all forms of local IPC or side effects are blocked. It deliberately does **not** implement a default seccomp syscall policy, and the host root still exposes data outside the masked directories. Paths such as `/etc`, `/opt`, `/srv` and `/var` may remain readable. There is no defense against kernel exploits, resource exhaustion, or malicious logic using unfiltered interfaces.
 
 **Do not run hostile or unknown software under the assumption that ShellTrace's sandbox is sufficient.** Use a separately isolated VM with no host credentials or shared folders instead.
 
@@ -18,7 +18,7 @@ If Bubblewrap cannot establish namespaces, ShellTrace will surface the failure; 
 
 - Snapshots are point-in-time. Changes caused by other processes may be included; rapid create/delete cycles may be absent.
 - File hashes are limited by `--max-hash-mib`, so large-file modifications may be inferred from metadata only or missed.
-- Only the given scope (host) or `/work` (sandbox) has a filesystem diff. Writes to paths elsewhere are not proven by a diff.
+- Only the given scope (host) or `/tmp/shelltrace-work` (sandbox) has a filesystem diff. Writes to paths elsewhere are not proven by a diff.
 - Ptrace/strace may be restricted by Yama, container policies, seccomp, or kernel configuration.
 - Successful syscalls are not the same as durable effects. Network events are socket observations, not an indication that a remote host accepted a transaction.
 - Incomplete/resumed syscall lines are not reconstructed.
