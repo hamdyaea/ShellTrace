@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 230" role="img" aria-label="ShellTrace wordmark">
+  <defs>
+    <linearGradient id="edge"><stop stop-color="#11DFF2"/><stop offset="1" stop-color="#236AF4"/></linearGradient>
+  </defs>
+  <g transform="translate(10,4) scale(.89)">
+    <path d="M128 11L224 45Q237 50 237 66V145Q236 202 128 246Q20 202 19 145V66Q19 50 32 45Z" fill="url(#edge)"/>
+    <path d="M128 28L210 57Q219 60 219 73V142Q219 191 128 228Q37 191 37 142V73Q37 60 46 57Z" fill="#071729"/>
+    <path d="M61 75L83 91L61 107M91 108H117" fill="none" stroke="#FFF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="171" cy="90" r="36" fill="#05291F" stroke="#31F68B" stroke-width="9"/>
+    <path d="M145 92H157L163 79L170 105L178 87L183 92H196" fill="none" stroke="#31F68B" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M194 114L215 136" stroke="#31F68B" stroke-width="12" stroke-linecap="round"/>
+    <path d="M62 134V205" stroke="#1DF08D" stroke-width="4"/>
+    <g fill="#28F491"><circle cx="62" cy="145" r="7"/><circle cx="62" cy="172" r="7"/><circle cx="62" cy="199" r="7"/></g>
+    <g fill="#25334C"><rect x="78" y="132" width="122" height="24" rx="12"/><rect x="78" y="159" width="122" height="24" rx="12"/><rect x="78" y="186" width="122" height="24" rx="12"/></g>
+    <g fill="#FFF" font-family="monospace" font-size="17" font-weight="600"><text x="89" y="150">execve(…)</text><text x="89" y="177">open(…)</text><text x="89" y="204">write(…)</text></g>
+  </g>
+  <text x="250" y="151" font-family="DejaVu Sans, Arial, sans-serif" font-size="98" font-weight="750"><tspan fill="#0B172B">Shell</tspan><tspan fill="#2AE895">Trace</tspan></text>
+</svg>
