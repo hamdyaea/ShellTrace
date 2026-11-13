@@ -125,8 +125,8 @@ mod tests {
         assert!(!args.contains(&OsString::from("/media")));
         assert!(!args.contains(&OsString::from("/mnt")));
         assert!(args.windows(2).any(|pair|
-            pair[0] == OsString::from("--tmpfs") &&
-            pair[1] == OsString::from("/home")));
+            pair[0] == "--tmpfs" &&
+            pair[1] == "/home"));
     }
 
     #[test]
@@ -135,7 +135,7 @@ mod tests {
         append_optional_tmpfs_mounts(&mut args, |_| true);
         assert_eq!(args.len(), OPTIONAL_MASKS.len() * 2);
         assert!(args.windows(2).any(|pair|
-            pair[0] == OsString::from("--tmpfs") &&
-            pair[1] == OsString::from("/media")));
+            pair[0] == "--tmpfs" &&
+            pair[1] == "/media"));
     }
 }
