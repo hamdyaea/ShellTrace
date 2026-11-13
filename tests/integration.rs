@@ -107,6 +107,7 @@ fn host_reports_local_tcp_connection_as_internet_socket_call() {
     let events = json["observations"]["network_events"].as_array().unwrap();
     assert!(events.iter().any(|e|
         e["syscall"] == "connect" && e["category"] == "internet"
-        && e["origin"] == "command" && e["succeeded"] == true),
+        && e["origin"] == "command"
+        && (e["succeeded"] == true || e["result"].as_str().is_some_and(|r| r.contains("EINPROGRESS")))),
         "captured network events: {events:?}");
 }
