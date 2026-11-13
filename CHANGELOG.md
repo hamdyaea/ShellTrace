@@ -2,6 +2,8 @@
 
 ## 0.2.0 — 2026-11-13
 
+- Fix GUI installation on Manjaro when old `~/.cargo/bin` shims shadow up-to-date `/usr/bin` Cargo/Rust; display the actual versions used before building.
+
 - Add native Qt6 Widgets graphical desktop application backed by the Rust CLI, plus a per-user application-menu installer.
 - Show filesystem changes with structured before/after file size, permissions, target and SHA-256 when available.
 - Add conservative syscall origin classification (`command`, `sandbox_setup`, `unknown`).

@@ -37,6 +37,8 @@ Your distribution's Rust version must be recent enough for the locked dependenci
 
 ## Install in the Linux application menu
 
+After installing Qt6 dependencies, the build script checks the active Rust and Cargo versions. If an outdated rustup installation under `~/.cargo/bin` shadows an up-to-date Arch/Manjaro installation under `/usr/bin`, the script automatically selects the newer system toolchain.
+
 After installing Qt6 dependencies:
 
 ```bash
