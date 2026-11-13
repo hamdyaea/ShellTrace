@@ -43,4 +43,6 @@ jobs:
       - name: Headless UI startup smoke test
         env:
           QT_QPA_PLATFORM: offscreen
-        run: ./build/gui/shelltrace-gui --self-test
+        run: |
+          ./build/gui/shelltrace-gui --self-test
+          ./build/gui/shelltrace-gui --self-test-contrast
