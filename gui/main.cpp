@@ -31,6 +31,7 @@
 #include <QTabWidget>
 #include <QTableWidget>
 #include <QTemporaryDir>
+#include <QTextCursor>
 #include <QVBoxLayout>
 #include <QWidget>
 
@@ -532,7 +533,7 @@ private:
         sensitiveMetric_->setText(QString::number(sensitive));
         const QString mode = report.value("mode").toString();
         const QString date = QDateTime::fromSecsSinceEpoch(
-            static_cast<qint64>(report.value("started_at_unix").toDouble())).toString(Qt::DefaultLocaleShortDate);
+            static_cast<qint64>(report.value("started_at_unix").toDouble())).toString(Qt::ISODate);
         const QString result = QString::number(report.value("exit_code").toInt());
         const QString title = L("Report loaded", "Rapport chargé") + " · " + mode + " · " + date
             + " · " + L("exit", "code") + "=" + result;
