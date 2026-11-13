@@ -953,7 +953,7 @@ int main(int argc, char **argv) {
             const double labels = contrastRatio(p.color(QPalette::WindowText), p.color(QPalette::Window));
             const double buttons = contrastRatio(p.color(QPalette::ButtonText), p.color(QPalette::Button));
             const double selected = contrastRatio(p.color(QPalette::HighlightedText), p.color(QPalette::Highlight));
-            const QString css = QApplication::styleSheet();
+            const QString css = app.styleSheet();
             qInfo() << "Contrast test" << mode << normal << labels << buttons << selected;
             if (normal < 7.0 || labels < 7.0 || buttons < 7.0 || selected < 4.5) {
                 qCritical() << "Insufficient text contrast in" << mode;
