@@ -1,4 +1,4 @@
-use crate::report::FileChange;
+use crate::report::{FileChange, FileState};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs::{self, File};
@@ -95,6 +95,16 @@ fn hash_file(path: &Path) -> io::Result<String> {
     Ok(format!("{:x}", hasher.finalize()))
 }
 
+fn as_state(entry: &Entry) -> FileState {
+    FileState {
+        file_type: entry.file_type.clone(),
+        size_bytes: entry.size,
+        mode: entry.mode,
+        sha256: entry.digest.clone(),
+        symlink_target: entry.target.clone(),
+    }
+}
+
 pub fn compare(before: &Snapshot, after: &Snapshot) -> (Vec<FileChange>, Vec<String>) {
     let keys: BTreeSet<_> = before.entries.keys().chain(after.entries.keys()).collect();
     let mut changes = Vec::new();
@@ -124,7 +134,13 @@ pub fn compare(before: &Snapshot, after: &Snapshot) -> (Vec<FileChange>, Vec<Str
             _ => None,
         };
         if let Some((kind, evidence)) = result {
-            changes.push(FileChange { path: key.clone(), kind: kind.to_owned(), evidence: evidence.to_owned() });
+            changes.push(FileChange {
+                path: key.clone(),
+                kind: kind.to_owned(),
+                evidence: evidence.to_owned(),
+                before: lhs.map(as_state),
+                after: rhs.map(as_state),
+            });
         }
     }
     (changes, warnings)
@@ -145,9 +161,12 @@ mod tests {
         fs::write(dir.path().join("new"), "hello").unwrap();
         let after = snapshot(dir.path(), 1_000).unwrap();
         let (changes, _) = compare(&before, &after);
-        assert!(changes.iter().any(|c| c.kind == "modified" && c.path == "old"));
-        assert!(changes.iter().any(|c| c.kind == "deleted" && c.path == "remove"));
-        assert!(changes.iter().any(|c| c.kind == "created" && c.path == "new"));
+        assert!(changes.iter().any(|c| c.kind == "modified" && c.path == "old"
+            && c.before.as_ref().and_then(|s| s.sha256.as_ref()) != c.after.as_ref().and_then(|s| s.sha256.as_ref())));
+        assert!(changes.iter().any(|c| c.kind == "deleted" && c.path == "remove"
+            && c.before.is_some() && c.after.is_none()));
+        assert!(changes.iter().any(|c| c.kind == "created" && c.path == "new"
+            && c.before.is_none() && c.after.as_ref().is_some_and(|s| s.size_bytes == 5)));
     }
 
     #[test]
