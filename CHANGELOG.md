@@ -2,6 +2,8 @@
 
 ## 0.3.2 — 2026-11-13
 
+- Fix AUR builds on Manjaro/Arch when a legacy user rustup Cargo shadows system Cargo: force system `/usr/bin/cargo` and `/usr/bin/rustc` in `PKGBUILD`.
+
 - Remove all 99 bilingual Qt6 UI labels and ensure English-only menus, fields, tabs, prompts, status messages and warnings.
 - Use English Qt dialogs rather than localized native file dialogs.
 - Force English Qt UI locale even when the Linux desktop locale is French or another language; do not alter the environment of traced commands.

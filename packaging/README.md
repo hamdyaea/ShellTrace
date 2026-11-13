@@ -35,6 +35,11 @@ where the distro rustc is too old.
 ## Arch / Manjaro — AUR VCS package
 
 The source package is `shelltrace-git` in [packaging/aur](aur/).
+
+The Arch/Manjaro build always uses `/usr/bin/cargo` and
+`/usr/bin/rustc` from the `rust` make-dependency. This avoids old user-level
+`~/.cargo/bin` rustup shims (e.g. Cargo 1.70, which cannot parse Rust edition
+2024 dependencies) even when `yay` runs `makepkg` under that PATH.
 It builds the CLI and GUI from GitHub and installs the application icon.
 
 On Manjaro:
