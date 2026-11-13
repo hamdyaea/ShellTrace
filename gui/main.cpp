@@ -17,6 +17,11 @@
 #include <QJsonObject>
 #include <QJsonParseError>
 #include <QLabel>
+#include <QIcon>
+#include <QPainter>
+#include <QPainterPath>
+#include <QPalette>
+#include <QSettings>
 #include <QLineEdit>
 #include <QLocale>
 #include <QMainWindow>
@@ -36,6 +41,72 @@
 #include <QWidget>
 
 namespace {
+// Native raster rendering of the selected shield emblem. It needs only Qt6
+// Widgets, even if a distribution does not ship the Qt SVG image plugin.
+QIcon badgeIcon() {
+    QPixmap pixmap(256, 256);
+    pixmap.fill(Qt::transparent);
+    QPainter p(&pixmap);
+    p.setRenderHint(QPainter::Antialiasing);
+    QPainterPath shield;
+    shield.moveTo(128, 10);
+    shield.lineTo(224, 45);
+    shield.quadTo(237, 50, 237, 66);
+    shield.lineTo(237, 145);
+    shield.quadTo(236, 202, 128, 245);
+    shield.quadTo(20, 202, 19, 145);
+    shield.lineTo(19, 66);
+    shield.quadTo(19, 50, 32, 45);
+    shield.closeSubpath();
+    QLinearGradient edge(10, 25, 244, 240);
+    edge.setColorAt(0, QColor("#16E5F7"));
+    edge.setColorAt(0.55, QColor("#118EFF"));
+    edge.setColorAt(1, QColor("#173DE9"));
+    p.fillPath(shield, edge);
+    QPainterPath inner;
+    inner.moveTo(128, 28);
+    inner.lineTo(209, 57);
+    inner.quadTo(219, 60, 219, 74);
+    inner.lineTo(219, 142);
+    inner.quadTo(218, 191, 128, 228);
+    inner.quadTo(38, 191, 37, 142);
+    inner.lineTo(37, 73);
+    inner.quadTo(37, 60, 47, 57);
+    inner.closeSubpath();
+    p.fillPath(inner, QColor("#071729"));
+    p.setPen(QPen(QColor("#F7FAFF"), 9, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    p.drawLine(QPointF(61, 75), QPointF(83, 91));
+    p.drawLine(QPointF(83, 91), QPointF(61, 107));
+    p.drawLine(QPointF(91, 108), QPointF(117, 108));
+    p.setBrush(QColor("#05291F"));
+    p.setPen(QPen(QColor("#31F68B"), 9));
+    p.drawEllipse(QPointF(171, 90), 36, 36);
+    p.setPen(QPen(QColor("#31F68B"), 5, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    QPainterPath pulse;
+    pulse.moveTo(145, 92); pulse.lineTo(157, 92); pulse.lineTo(163, 79);
+    pulse.lineTo(170, 105); pulse.lineTo(178, 87); pulse.lineTo(183, 92);
+    pulse.lineTo(196, 92);
+    p.drawPath(pulse);
+    p.setPen(QPen(QColor("#31F68B"), 12, Qt::SolidLine, Qt::RoundCap));
+    p.drawLine(QPointF(194, 114), QPointF(215, 136));
+    p.setPen(QPen(QColor("#1DF08D"), 4));
+    p.drawLine(62, 134, 62, 205);
+    p.setPen(Qt::NoPen);
+    p.setBrush(QColor("#28F491"));
+    for (int y : {145, 172, 199}) p.drawEllipse(QPointF(62, y), 7, 7);
+    p.setBrush(QColor("#25334C"));
+    for (int y : {132, 159, 186}) p.drawRoundedRect(QRectF(78, y, 122, 24), 12, 12);
+    p.setPen(QColor("#F6FAFF"));
+    QFont mono("Monospace", 12, QFont::DemiBold);
+    mono.setStyleHint(QFont::TypeWriter);
+    p.setFont(mono);
+    p.drawText(QRectF(89, 132, 112, 24), Qt::AlignVCenter, "execve(…)");
+    p.drawText(QRectF(89, 159, 112, 24), Qt::AlignVCenter, "open(…)");
+    p.drawText(QRectF(89, 186, 112, 24), Qt::AlignVCenter, "write(…)");
+    p.end();
+    return QIcon(pixmap);
+}
+
 QString locateEngine() {
     const QString dir = QCoreApplication::applicationDirPath();
     const QStringList candidates = {
@@ -85,8 +156,10 @@ QString fileState(const QJsonValue &value) {
 
 class ShellTraceWindow final : public QMainWindow {
 public:
-    ShellTraceWindow() : proc_(this), french_(QLocale::system().language() == QLocale::French) {
+    ShellTraceWindow() : proc_(this), french_(QLocale::system().language() == QLocale::French),
+        systemPalette_(QApplication::palette()) {
         setWindowTitle("ShellTrace · Linux impact inspector");
+        setWindowIcon(badgeIcon());
         resize(1120, 820);
         setMinimumSize(780, 610);
 
@@ -96,6 +169,9 @@ public:
         layout->setSpacing(13);
 
         auto *heading = new QHBoxLayout;
+        auto *brandIcon = new QLabel(root);
+        brandIcon->setPixmap(badgeIcon().pixmap(62, 62));
+        heading->addWidget(brandIcon);
         auto *headText = new QVBoxLayout;
         auto *brand = new QLabel("ShellTrace", root);
         brand->setObjectName("brand");
@@ -108,6 +184,18 @@ public:
         auto *version = new QLabel("RUST ENGINE  ·  QT6 DESKTOP", root);
         version->setObjectName("eyebrow");
         heading->addWidget(version);
+        theme_ = new QComboBox(root);
+        theme_->setAccessibleName(L("Appearance", "Apparence"));
+        theme_->setToolTip(L("Appearance: Dark, Light or System. Dark is the default.",
+                             "Apparence : Sombre, Clair ou Système. Sombre par défaut."));
+        theme_->addItem(L("Dark", "Sombre"), "dark");
+        theme_->addItem(L("Light", "Clair"), "light");
+        theme_->addItem(L("System", "Système"), "system");
+        const QString savedTheme = QSettings().value("appearance/theme", "dark").toString();
+        const int index = theme_->findData(savedTheme);
+        theme_->setCurrentIndex(index >= 0 ? index : 0);
+        heading->addSpacing(12);
+        heading->addWidget(theme_);
         layout->addLayout(heading);
 
         auto *config = new QGroupBox(L("New analysis", "Nouvelle analyse"), root);
@@ -254,6 +342,7 @@ public:
         )STYLE");
 
         connect(mode_, &QComboBox::currentIndexChanged, this, [this](int) { updateMode(); });
+        connect(theme_, &QComboBox::currentIndexChanged, this, [this](int) { applyTheme(); });
         connect(browseExe, &QPushButton::clicked, this, [this] {
             const QString f = QFileDialog::getOpenFileName(this, L("Choose executable", "Choisir l'exécutable"));
             if (!f.isEmpty()) executable_->setText(f);
@@ -312,10 +401,45 @@ public:
                 ? L("Analysis completed. Review the results and warnings.", "Analyse terminée. Consultez les résultats et avertissements.")
                 : L("Execution failed or was stopped (exit ", "Exécution échouée ou arrêtée (code ") + QString::number(code) + ").");
         });
+        applyTheme();
         updateMode();
     }
 
 private:
+    void applyTheme() {
+        const QString choice = theme_->currentData().toString();
+        QPalette p = systemPalette_;
+        if (choice == "dark" || choice == "light") {
+            const bool dark = choice == "dark";
+            const QColor window(dark ? "#171D29" : "#F4F7FB");
+            const QColor surface(dark ? "#222D3D" : "#FFFFFF");
+            const QColor alternate(dark ? "#2A3547" : "#EAF0F6");
+            const QColor foreground(dark ? "#F3F7FE" : "#182336");
+            const QColor secondary(dark ? "#A9B7CE" : "#526276");
+            const QColor border(dark ? "#45556B" : "#CED8E4");
+            const QColor accent(dark ? "#248FD9" : "#136DAA");
+            p.setColor(QPalette::Window, window);
+            p.setColor(QPalette::WindowText, foreground);
+            p.setColor(QPalette::Base, surface);
+            p.setColor(QPalette::AlternateBase, alternate);
+            p.setColor(QPalette::Text, foreground);
+            p.setColor(QPalette::Button, alternate);
+            p.setColor(QPalette::ButtonText, foreground);
+            p.setColor(QPalette::ToolTipBase, surface);
+            p.setColor(QPalette::ToolTipText, foreground);
+            p.setColor(QPalette::Mid, secondary);
+            p.setColor(QPalette::Midlight, border);
+            p.setColor(QPalette::Highlight, accent);
+            p.setColor(QPalette::HighlightedText, QColor("#FFFFFF"));
+            p.setColor(QPalette::Link, accent);
+            p.setColor(QPalette::PlaceholderText, secondary);
+            p.setColor(QPalette::Disabled, QPalette::Text, secondary);
+            p.setColor(QPalette::Disabled, QPalette::ButtonText, secondary);
+        }
+        QApplication::setPalette(p);
+        QSettings().setValue("appearance/theme", choice);
+    }
+
     QString L(const char *en, const char *fr) const {
         return QString::fromUtf8(french_ ? fr : en);
     }
@@ -613,10 +737,12 @@ private:
     QProcess proc_;
     QTemporaryDir temp_;
     const bool french_;
+    const QPalette systemPalette_;
     bool logTruncated_ = false;
     QString reportFile_;
 
     QComboBox *mode_ = nullptr;
+    QComboBox *theme_ = nullptr;
     QComboBox *origin_ = nullptr;
     QLineEdit *executable_ = nullptr;
     QLineEdit *arguments_ = nullptr;
@@ -647,7 +773,7 @@ private:
 int main(int argc, char **argv) {
     QApplication app(argc, argv);
     app.setApplicationName("ShellTrace");
-    app.setApplicationVersion("0.2.0");
+    app.setApplicationVersion("0.3.0");
     app.setOrganizationName("ShellTrace");
     QApplication::setStyle(QStyleFactory::create("Fusion"));
     ShellTraceWindow window;
