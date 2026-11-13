@@ -159,8 +159,7 @@ QString fileState(const QJsonValue &value) {
 
 class ShellTraceWindow final : public QMainWindow {
 public:
-    ShellTraceWindow() : proc_(this), french_(QLocale::system().language() == QLocale::French),
-        systemPalette_(QApplication::palette()) {
+    ShellTraceWindow() : proc_(this), systemPalette_(QApplication::palette()) {
         setWindowTitle("ShellTrace · Linux impact inspector");
         setWindowIcon(badgeIcon());
         resize(1120, 820);
@@ -179,8 +178,7 @@ public:
         auto *headText = new QVBoxLayout;
         auto *brand = new QLabel("ShellTrace", root);
         brand->setObjectName("brand");
-        auto *subtitle = new QLabel(L("Understand what your Linux command changes.",
-                                      "Comprenez ce que votre commande Linux modifie."), root);
+        auto *subtitle = new QLabel(QStringLiteral("Understand what your Linux command changes."), root);
         subtitle->setObjectName("subtitle");
         headText->addWidget(brand);
         headText->addWidget(subtitle);
@@ -190,12 +188,11 @@ public:
         heading->addWidget(version);
         theme_ = new QComboBox(root);
         theme_->setObjectName("appearance-selector");
-        theme_->setAccessibleName(L("Appearance", "Apparence"));
-        theme_->setToolTip(L("Appearance: Dark, Light or System. Dark is the default.",
-                             "Apparence : Sombre, Clair ou Système. Sombre par défaut."));
-        theme_->addItem(L("Dark", "Sombre"), "dark");
-        theme_->addItem(L("Light", "Clair"), "light");
-        theme_->addItem(L("System", "Système"), "system");
+        theme_->setAccessibleName(QStringLiteral("Appearance"));
+        theme_->setToolTip(QStringLiteral("Appearance: Dark, Light or System. Dark is the default."));
+        theme_->addItem(QStringLiteral("Dark"), "dark");
+        theme_->addItem(QStringLiteral("Light"), "light");
+        theme_->addItem(QStringLiteral("System"), "system");
         const QString savedTheme = QSettings().value("appearance/theme", "dark").toString();
         const int index = theme_->findData(savedTheme);
         theme_->setCurrentIndex(index >= 0 ? index : 0);
@@ -203,48 +200,47 @@ public:
         heading->addWidget(theme_);
         layout->addLayout(heading);
 
-        auto *config = new QGroupBox(L("New analysis", "Nouvelle analyse"), root);
+        auto *config = new QGroupBox(QStringLiteral("New analysis"), root);
         auto *form = new QGridLayout(config);
         form->setHorizontalSpacing(12);
         form->setVerticalSpacing(9);
         int r = 0;
 
         mode_ = new QComboBox(config);
-        mode_->addItem(L("Sandbox · recommended", "Sandbox · recommandé"));
-        mode_->addItem(L("Host · executes on your computer", "Hôte · exécute sur votre ordinateur"));
-        form->addWidget(new QLabel(L("Execution mode", "Mode d'exécution"), config), r, 0);
+        mode_->addItem(QStringLiteral("Sandbox · recommended"));
+        mode_->addItem(QStringLiteral("Host · executes on your computer"));
+        form->addWidget(new QLabel(QStringLiteral("Execution mode"), config), r, 0);
         form->addWidget(mode_, r++, 1, 1, 3);
 
         executable_ = new QLineEdit("/bin/sh", config);
-        auto *browseExe = new QPushButton(L("Browse", "Parcourir"), config);
-        form->addWidget(new QLabel(L("Executable", "Exécutable"), config), r, 0);
+        auto *browseExe = new QPushButton(QStringLiteral("Browse"), config);
+        form->addWidget(new QLabel(QStringLiteral("Executable"), config), r, 0);
         form->addWidget(executable_, r, 1, 1, 2);
         form->addWidget(browseExe, r++, 3);
 
         arguments_ = new QLineEdit("-c \"echo ShellTrace > gui-demo.txt\"", config);
-        arguments_->setPlaceholderText(L("Arguments, e.g. -c \"echo hello > demo.txt\"",
-                                          "Arguments, ex. -c \"echo bonjour > demo.txt\""));
-        form->addWidget(new QLabel(L("Arguments", "Arguments"), config), r, 0);
+        arguments_->setPlaceholderText(QStringLiteral("Arguments, e.g. -c \"echo hello > demo.txt\""));
+        form->addWidget(new QLabel(QStringLiteral("Arguments"), config), r, 0);
         form->addWidget(arguments_, r++, 1, 1, 3);
 
         scope_ = new QLineEdit(QDir::tempPath() + "/shelltrace-gui-demo", config);
         QDir().mkpath(scope_->text());
-        auto *browseScope = new QPushButton(L("Folder", "Dossier"), config);
-        form->addWidget(new QLabel(L("Watch folder (host)", "Dossier surveillé (hôte)"), config), r, 0);
+        auto *browseScope = new QPushButton(QStringLiteral("Folder"), config);
+        form->addWidget(new QLabel(QStringLiteral("Watch folder (host)"), config), r, 0);
         form->addWidget(scope_, r, 1, 1, 2);
         form->addWidget(browseScope, r++, 3);
 
         seed_ = new QLineEdit(config);
-        seed_->setPlaceholderText(L("Optional: copy a folder into the sandbox", "Facultatif : copier un dossier dans le sandbox"));
-        auto *browseSeed = new QPushButton(L("Folder", "Dossier"), config);
-        form->addWidget(new QLabel(L("Sandbox input", "Dossier source du sandbox"), config), r, 0);
+        seed_->setPlaceholderText(QStringLiteral("Optional: copy a folder into the sandbox"));
+        auto *browseSeed = new QPushButton(QStringLiteral("Folder"), config);
+        form->addWidget(new QLabel(QStringLiteral("Sandbox input"), config), r, 0);
         form->addWidget(seed_, r, 1, 1, 2);
         form->addWidget(browseSeed, r++, 3);
 
         engine_ = new QLineEdit(locateEngine(), config);
-        auto *browseEngine = new QPushButton(L("Binary", "Binaire"), config);
-        engine_->setPlaceholderText(L("Path to built shelltrace executable", "Chemin vers le binaire shelltrace"));
-        form->addWidget(new QLabel(L("Rust engine", "Moteur Rust"), config), r, 0);
+        auto *browseEngine = new QPushButton(QStringLiteral("Binary"), config);
+        engine_->setPlaceholderText(QStringLiteral("Path to built shelltrace executable"));
+        form->addWidget(new QLabel(QStringLiteral("Rust engine"), config), r, 0);
         form->addWidget(engine_, r, 1, 1, 2);
         form->addWidget(browseEngine, r++, 3);
 
@@ -258,12 +254,12 @@ public:
         layout->addWidget(warning_);
 
         auto *buttons = new QHBoxLayout;
-        run_ = new QPushButton(L("Start analysis", "Démarrer l'analyse"), root);
+        run_ = new QPushButton(QStringLiteral("Start analysis"), root);
         run_->setObjectName("primary");
-        stop_ = new QPushButton(L("Stop", "Arrêter"), root);
+        stop_ = new QPushButton(QStringLiteral("Stop"), root);
         stop_->setEnabled(false);
-        open_ = new QPushButton(L("Open JSON report", "Ouvrir un rapport JSON"), root);
-        save_ = new QPushButton(L("Save report…", "Enregistrer le rapport…"), root);
+        open_ = new QPushButton(QStringLiteral("Open JSON report"), root);
+        save_ = new QPushButton(QStringLiteral("Save report…"), root);
         save_->setEnabled(false);
         buttons->addWidget(run_);
         buttons->addWidget(stop_);
@@ -274,46 +270,46 @@ public:
 
         auto *metrics = new QHBoxLayout;
         metrics->setSpacing(10);
-        metrics->addWidget(metricCard(L("Filesystem changes", "Fichiers modifiés"), fileMetric_), 1);
-        metrics->addWidget(metricCard(L("Command executions", "Exécutions"), processMetric_), 1);
-        metrics->addWidget(metricCard(L("Internet socket calls", "Appels réseau Internet"), networkMetric_), 1);
-        metrics->addWidget(metricCard(L("Sensitive paths", "Chemins sensibles"), sensitiveMetric_), 1);
+        metrics->addWidget(metricCard(QStringLiteral("Filesystem changes"), fileMetric_), 1);
+        metrics->addWidget(metricCard(QStringLiteral("Command executions"), processMetric_), 1);
+        metrics->addWidget(metricCard(QStringLiteral("Internet socket calls"), networkMetric_), 1);
+        metrics->addWidget(metricCard(QStringLiteral("Sensitive paths"), sensitiveMetric_), 1);
         layout->addLayout(metrics);
 
         auto *filters = new QHBoxLayout;
         search_ = new QLineEdit(root);
-        search_->setPlaceholderText(L("Search results by path, syscall, address…", "Rechercher chemin, appel système, adresse…"));
+        search_->setPlaceholderText(QStringLiteral("Search results by path, syscall, address…"));
         origin_ = new QComboBox(root);
-        origin_->addItem(L("All event origins", "Toutes les origines"), "all");
-        origin_->addItem(L("Command only", "Commande uniquement"), "command");
-        origin_->addItem(L("Bubblewrap setup", "Préparation Bubblewrap"), "sandbox_setup");
-        origin_->addItem(L("Unclassified", "Non classé"), "unknown");
+        origin_->addItem(QStringLiteral("All event origins"), "all");
+        origin_->addItem(QStringLiteral("Command only"), "command");
+        origin_->addItem(QStringLiteral("Bubblewrap setup"), "sandbox_setup");
+        origin_->addItem(QStringLiteral("Unclassified"), "unknown");
         filters->addWidget(search_, 1);
         filters->addWidget(origin_);
         layout->addLayout(filters);
 
         tabs_ = new QTabWidget(root);
-        files_ = makeTable({L("Change", "Changement"), L("Path", "Chemin"),
-                            L("Before", "Avant"), L("After", "Après"), L("Evidence", "Preuve")});
-        operations_ = makeTable({L("Origin", "Origine"), "PID", L("Operation", "Opération"),
-                                L("Paths", "Chemins"), L("Result", "Résultat")});
-        processes_ = makeTable({L("Origin", "Origine"), "PID", L("Operation", "Opération"),
-                               L("Executable", "Exécutable"), L("Result", "Résultat")});
-        network_ = makeTable({L("Origin", "Origine"), "PID", L("Operation", "Opération"),
-                             L("Type", "Type"), L("Address", "Adresse"), L("Result", "Résultat")});
-        sensitive_ = makeTable({L("Origin", "Origine"), "PID", L("Operation", "Opération"),
-                               L("Sensitive path", "Chemin sensible"), L("Result", "Résultat")});
-        tabs_->addTab(files_, L("File changes", "Fichiers"));
-        tabs_->addTab(operations_, L("File operations", "Opérations"));
-        tabs_->addTab(processes_, L("Processes", "Processus"));
-        tabs_->addTab(network_, L("Network", "Réseau"));
-        tabs_->addTab(sensitive_, L("Sensitive paths", "Chemins sensibles"));
+        files_ = makeTable({QStringLiteral("Change"), QStringLiteral("Path"),
+                            QStringLiteral("Before"), QStringLiteral("After"), QStringLiteral("Evidence")});
+        operations_ = makeTable({QStringLiteral("Origin"), "PID", QStringLiteral("Operation"),
+                                QStringLiteral("Paths"), QStringLiteral("Result")});
+        processes_ = makeTable({QStringLiteral("Origin"), "PID", QStringLiteral("Operation"),
+                               QStringLiteral("Executable"), QStringLiteral("Result")});
+        network_ = makeTable({QStringLiteral("Origin"), "PID", QStringLiteral("Operation"),
+                             QStringLiteral("Type"), QStringLiteral("Address"), QStringLiteral("Result")});
+        sensitive_ = makeTable({QStringLiteral("Origin"), "PID", QStringLiteral("Operation"),
+                               QStringLiteral("Sensitive path"), QStringLiteral("Result")});
+        tabs_->addTab(files_, QStringLiteral("File changes"));
+        tabs_->addTab(operations_, QStringLiteral("File operations"));
+        tabs_->addTab(processes_, QStringLiteral("Processes"));
+        tabs_->addTab(network_, QStringLiteral("Network"));
+        tabs_->addTab(sensitive_, QStringLiteral("Sensitive paths"));
         log_ = new QPlainTextEdit(root);
         log_->setReadOnly(true);
-        log_->setPlaceholderText(L("Command output appears here.", "La sortie de la commande apparaît ici."));
+        log_->setPlaceholderText(QStringLiteral("Command output appears here."));
         json_ = new QPlainTextEdit(root);
         json_->setReadOnly(true);
-        tabs_->addTab(log_, L("Execution log", "Journal"));
+        tabs_->addTab(log_, QStringLiteral("Execution log"));
         tabs_->addTab(json_, "JSON");
         layout->addWidget(tabs_, 1);
 
@@ -324,36 +320,36 @@ public:
         progress_->setValue(0);
         layout->addWidget(progress_);
         setCentralWidget(root);
-        statusBar()->showMessage(L("Ready · sandbox is selected by default.", "Prêt · le sandbox est sélectionné par défaut."));
+        statusBar()->showMessage(QStringLiteral("Ready · sandbox is selected by default."));
 
         connect(mode_, &QComboBox::currentIndexChanged, this, [this](int) { updateMode(); });
         connect(theme_, &QComboBox::currentIndexChanged, this, [this](int) { applyTheme(); });
         connect(browseExe, &QPushButton::clicked, this, [this] {
-            const QString f = QFileDialog::getOpenFileName(this, L("Choose executable", "Choisir l'exécutable"));
+            const QString f = QFileDialog::getOpenFileName(this, QStringLiteral("Choose executable"), QString(), QString(), nullptr, QFileDialog::DontUseNativeDialog);
             if (!f.isEmpty()) executable_->setText(f);
         });
         connect(browseEngine, &QPushButton::clicked, this, [this] {
-            const QString f = QFileDialog::getOpenFileName(this, L("Choose ShellTrace binary", "Choisir le binaire ShellTrace"));
+            const QString f = QFileDialog::getOpenFileName(this, QStringLiteral("Choose ShellTrace binary"), QString(), QString(), nullptr, QFileDialog::DontUseNativeDialog);
             if (!f.isEmpty()) engine_->setText(f);
         });
         connect(browseScope, &QPushButton::clicked, this, [this] {
-            const QString f = QFileDialog::getExistingDirectory(this, L("Choose watched folder", "Dossier à surveiller"), scope_->text());
+            const QString f = QFileDialog::getExistingDirectory(this, QStringLiteral("Choose watched folder"), scope_->text(), QFileDialog::ShowDirsOnly | QFileDialog::DontUseNativeDialog);
             if (!f.isEmpty()) scope_->setText(f);
         });
         connect(browseSeed, &QPushButton::clicked, this, [this] {
-            const QString f = QFileDialog::getExistingDirectory(this, L("Choose sandbox input", "Dossier source du sandbox"));
+            const QString f = QFileDialog::getExistingDirectory(this, QStringLiteral("Choose sandbox input"), QString(), QFileDialog::ShowDirsOnly | QFileDialog::DontUseNativeDialog);
             if (!f.isEmpty()) seed_->setText(f);
         });
         connect(run_, &QPushButton::clicked, this, [this] { startAnalysis(); });
         connect(stop_, &QPushButton::clicked, this, [this] {
             if (proc_.state() != QProcess::NotRunning) {
                 proc_.kill();  // Terminates the tracer; detached grandchildren may remain.
-                log_->appendPlainText(L("Stop requested. Background descendants may survive.", "Arrêt demandé. Des processus descendants peuvent subsister."));
+                log_->appendPlainText(QStringLiteral("Stop requested. Background descendants may survive."));
             }
         });
         connect(open_, &QPushButton::clicked, this, [this] {
-            const QString f = QFileDialog::getOpenFileName(this, L("Open JSON report", "Ouvrir un rapport JSON"),
-                                                             QDir::homePath(), "JSON (*.json)");
+            const QString f = QFileDialog::getOpenFileName(this, QStringLiteral("Open JSON report"),
+                                                             QDir::homePath(), "JSON (*.json)", nullptr, QFileDialog::DontUseNativeDialog);
             if (!f.isEmpty()) loadReport(f);
         });
         connect(save_, &QPushButton::clicked, this, [this] { saveReport(); });
@@ -368,7 +364,7 @@ public:
         connect(&proc_, &QProcess::errorOccurred, this, [this](QProcess::ProcessError error) {
             if (error == QProcess::FailedToStart) {
                 setRunning(false);
-                QMessageBox::critical(this, "ShellTrace", L("Could not launch the Rust engine.", "Impossible de démarrer le moteur Rust.")
+                QMessageBox::critical(this, "ShellTrace", QStringLiteral("Could not launch the Rust engine.")
                     + "\n" + proc_.errorString());
             }
         });
@@ -379,12 +375,12 @@ public:
             if (QFileInfo::exists(reportFile_)) {
                 loadReport(reportFile_);
             } else {
-                statusBar()->showMessage(L("Command finished without a JSON report.", "Commande terminée sans rapport JSON."));
+                statusBar()->showMessage(QStringLiteral("Command finished without a JSON report."));
             }
             const bool okay = status == QProcess::NormalExit && code == 0;
             statusBar()->showMessage(okay
-                ? L("Analysis completed. Review the results and warnings.", "Analyse terminée. Consultez les résultats et avertissements.")
-                : L("Execution failed or was stopped (exit ", "Exécution échouée ou arrêtée (code ") + QString::number(code) + ").");
+                ? QStringLiteral("Analysis completed. Review the results and warnings.")
+                : QStringLiteral("Execution failed or was stopped (exit ") + QString::number(code) + ").");
         });
         applyTheme();
         updateMode();
@@ -576,10 +572,6 @@ private:
         QSettings().setValue("appearance/theme", choice);
     }
 
-    QString L(const char *en, const char *fr) const {
-        return QString::fromUtf8(french_ ? fr : en);
-    }
-
     QFrame *metricCard(const QString &caption, QLabel *&value) {
         auto *frame = new QFrame(this);
         frame->setObjectName("metric");
@@ -616,7 +608,7 @@ private:
                     values << table->horizontalHeaderItem(col)->text() + ": " + item->text();
                 }
             }
-            QMessageBox::information(this, L("Event details", "Détails"), values.join("\n"));
+            QMessageBox::information(this, QStringLiteral("Event details"), values.join("\n"));
         });
         return table;
     }
@@ -636,10 +628,8 @@ private:
         scope_->setEnabled(!sandbox);
         seed_->setEnabled(sandbox);
         warning_->setText(sandbox
-            ? L("Sandbox: host root is read-only, but this is NOT a secure malware sandbox. The temporary workspace is analyzed after execution.",
-                "Sandbox : système hôte en lecture seule, mais ce n'est PAS une isolation sécurisée contre les malwares. L'espace temporaire est analysé après exécution.")
-            : L("HOST MODE: the command can modify your computer and contact networks. Only the chosen folder is compared before and after.",
-                "MODE HÔTE : la commande peut modifier votre ordinateur et utiliser le réseau. Seul le dossier choisi est comparé avant/après."));
+            ? QStringLiteral("Sandbox: host root is read-only, but this is NOT a secure malware sandbox. The temporary workspace is analyzed after execution.")
+            : QStringLiteral("HOST MODE: the command can modify your computer and contact networks. Only the chosen folder is compared before and after."));
     }
 
     void setRunning(bool running) {
@@ -655,7 +645,7 @@ private:
         // Do not allow unlimited output to exhaust the GUI's memory.
         if (log_->toPlainText().size() > 250000) {
             if (!logTruncated_) {
-                log_->appendPlainText(L("[Output truncated. JSON report is unaffected.]", "[Sortie tronquée. Le JSON n'est pas affecté.]"));
+                log_->appendPlainText(QStringLiteral("[Output truncated. JSON report is unaffected.]"));
                 logTruncated_ = true;
             }
             return;
@@ -669,33 +659,31 @@ private:
         if (proc_.state() != QProcess::NotRunning) return;
         const QString binary = engine_->text().trimmed();
         if (binary.isEmpty() || !QFileInfo(binary).isExecutable()) {
-            QMessageBox::warning(this, "ShellTrace", L("Build ShellTrace first and choose its executable.",
-                "Compilez ShellTrace puis sélectionnez son exécutable."));
+            QMessageBox::warning(this, "ShellTrace", QStringLiteral("Build ShellTrace first and choose its executable."));
             return;
         }
         const QString executable = executable_->text().trimmed();
         if (executable.isEmpty()) {
-            QMessageBox::warning(this, "ShellTrace", L("Select a command to execute.", "Sélectionnez une commande."));
+            QMessageBox::warning(this, "ShellTrace", QStringLiteral("Select a command to execute."));
             return;
         }
         const bool sandbox = mode_->currentIndex() == 0;
         if (!sandbox && !QDir(scope_->text()).exists()) {
-            QMessageBox::warning(this, "ShellTrace", L("The watched folder does not exist.", "Le dossier surveillé n'existe pas."));
+            QMessageBox::warning(this, "ShellTrace", QStringLiteral("The watched folder does not exist."));
             return;
         }
         if (sandbox && !seed_->text().trimmed().isEmpty() && !QDir(seed_->text().trimmed()).exists()) {
-            QMessageBox::warning(this, "ShellTrace", L("The sandbox input folder does not exist.", "Le dossier source du sandbox n'existe pas."));
+            QMessageBox::warning(this, "ShellTrace", QStringLiteral("The sandbox input folder does not exist."));
             return;
         }
         if (!sandbox) {
-            const auto answer = QMessageBox::warning(this, L("Confirm real host execution", "Confirmer l'exécution réelle"),
-                L("This command will run on your real computer with your privileges. It may modify or delete files OUTSIDE the watched folder.\n\nContinue?",
-                  "Cette commande sera exécutée sur votre ordinateur avec vos droits. Elle peut modifier ou supprimer des fichiers HORS du dossier surveillé.\n\nContinuer ?"),
+            const auto answer = QMessageBox::warning(this, QStringLiteral("Confirm real host execution"),
+                QStringLiteral("This command will run on your real computer with your privileges. It may modify or delete files OUTSIDE the watched folder.\n\nContinue?"),
                 QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
             if (answer != QMessageBox::Yes) return;
         }
         if (!temp_.isValid()) {
-            QMessageBox::critical(this, "ShellTrace", L("Unable to create temporary report directory.", "Impossible de créer le dossier temporaire de rapport."));
+            QMessageBox::critical(this, "ShellTrace", QStringLiteral("Unable to create temporary report directory."));
             return;
         }
         reportFile_ = temp_.path() + "/report.json";
@@ -720,30 +708,30 @@ private:
         proc_.setArguments(args);
         proc_.setProcessChannelMode(QProcess::SeparateChannels);
         setRunning(true);
-        statusBar()->showMessage(L("Analyzing…", "Analyse en cours…"));
+        statusBar()->showMessage(QStringLiteral("Analyzing…"));
         proc_.start();
     }
 
     void loadReport(const QString &path) {
         QFile file(path);
         if (!file.open(QIODevice::ReadOnly)) {
-            QMessageBox::warning(this, "ShellTrace", L("Unable to read report.", "Impossible de lire le rapport.") + " " + file.errorString());
+            QMessageBox::warning(this, "ShellTrace", QStringLiteral("Unable to read report.") + " " + file.errorString());
             return;
         }
         if (file.size() > 25 * 1024 * 1024) {
-            QMessageBox::warning(this, "ShellTrace", L("The report exceeds 25 MiB.", "Le rapport dépasse 25 Mio."));
+            QMessageBox::warning(this, "ShellTrace", QStringLiteral("The report exceeds 25 MiB."));
             return;
         }
         const QByteArray bytes = file.readAll();
         QJsonParseError error;
         const auto doc = QJsonDocument::fromJson(bytes, &error);
         if (error.error != QJsonParseError::NoError || !doc.isObject()) {
-            QMessageBox::warning(this, "ShellTrace", L("Invalid JSON report.", "Rapport JSON invalide.") + " " + error.errorString());
+            QMessageBox::warning(this, "ShellTrace", QStringLiteral("Invalid JSON report.") + " " + error.errorString());
             return;
         }
         const QJsonObject report = doc.object();
         if (!report.contains("filesystem_changes") || !report.contains("observations")) {
-            QMessageBox::warning(this, "ShellTrace", L("Not a ShellTrace report.", "Ce fichier n'est pas un rapport ShellTrace."));
+            QMessageBox::warning(this, "ShellTrace", QStringLiteral("Not a ShellTrace report."));
             return;
         }
         reportFile_ = path;
@@ -797,8 +785,8 @@ private:
         const QString date = QDateTime::fromSecsSinceEpoch(
             static_cast<qint64>(report.value("started_at_unix").toDouble())).toString(Qt::ISODate);
         const QString result = QString::number(report.value("exit_code").toInt());
-        const QString title = L("Report loaded", "Rapport chargé") + " · " + mode + " · " + date
-            + " · " + L("exit", "code") + "=" + result;
+        const QString title = QStringLiteral("Report loaded") + " · " + mode + " · " + date
+            + " · " + QStringLiteral("exit") + "=" + result;
         statusBar()->showMessage(title);
         const auto warnings = report.value("warnings").toArray();
         if (!warnings.isEmpty()) {
@@ -833,23 +821,23 @@ private:
 
     void saveReport() {
         if (reportFile_.isEmpty() || !QFileInfo::exists(reportFile_)) return;
-        const QString dest = QFileDialog::getSaveFileName(this, L("Save ShellTrace JSON", "Enregistrer le JSON ShellTrace"),
-                                                           QDir::homePath() + "/shelltrace-report.json", "JSON (*.json)");
+        const QString dest = QFileDialog::getSaveFileName(this, QStringLiteral("Save ShellTrace JSON"),
+                                                           QDir::homePath() + "/shelltrace-report.json", "JSON (*.json)", nullptr, QFileDialog::DontUseNativeDialog);
         if (dest.isEmpty()) return;
         if (QFileInfo(dest).absoluteFilePath() == QFileInfo(reportFile_).absoluteFilePath()) return;
         if (QFile::exists(dest)) {
-            if (QMessageBox::question(this, "ShellTrace", L("Replace existing report?", "Remplacer le rapport existant?"),
+            if (QMessageBox::question(this, "ShellTrace", QStringLiteral("Replace existing report?"),
                     QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel) != QMessageBox::Yes) return;
             if (!QFile::remove(dest)) {
-                QMessageBox::warning(this, "ShellTrace", L("Unable to replace the destination.", "Impossible de remplacer le fichier."));
+                QMessageBox::warning(this, "ShellTrace", QStringLiteral("Unable to replace the destination."));
                 return;
             }
         }
         if (!QFile::copy(reportFile_, dest)) {
-            QMessageBox::warning(this, "ShellTrace", L("Could not save the report.", "Impossible d'enregistrer le rapport."));
+            QMessageBox::warning(this, "ShellTrace", QStringLiteral("Could not save the report."));
             return;
         }
-        statusBar()->showMessage(L("Saved: ", "Enregistré : ") + dest);
+        statusBar()->showMessage(QStringLiteral("Saved: ") + dest);
     }
 
     void closeEvent(QCloseEvent *event) override {
@@ -858,8 +846,7 @@ private:
             return;
         }
         const auto answer = QMessageBox::warning(this, "ShellTrace",
-            L("An analysis is still running. Stop it and close? Some child processes could remain.",
-              "Une analyse est en cours. L'arrêter et quitter ? Certains processus enfants peuvent subsister."),
+            QStringLiteral("An analysis is still running. Stop it and close? Some child processes could remain."),
             QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
         if (answer == QMessageBox::Yes) {
             proc_.kill();
@@ -872,7 +859,6 @@ private:
 
     QProcess proc_;
     QTemporaryDir temp_;
-    const bool french_;
     const QPalette systemPalette_;
     bool logTruncated_ = false;
     QString reportFile_;
@@ -924,6 +910,10 @@ static double contrastRatio(const QColor &first, const QColor &second) {
 }
 
 int main(int argc, char **argv) {
+    // The application UI always uses English, even on a French desktop.
+    // Never alter LC_ALL/LANG for the traced command: that could change what
+    // the target does and compromise the accuracy of ShellTrace's analysis.
+    QLocale::setDefault(QLocale(QLocale::English, QLocale::UnitedStates));
     QApplication app(argc, argv);
     app.setApplicationName("ShellTrace");
     app.setApplicationVersion("0.3.1");
@@ -931,11 +921,46 @@ int main(int argc, char **argv) {
     QApplication::setStyle(QStyleFactory::create("Fusion"));
 
     const bool testContrast = app.arguments().contains("--self-test-contrast");
-    if (testContrast) {
+    const bool testEnglish = app.arguments().contains("--self-test-english");
+    if (testContrast || testEnglish) {
         QStandardPaths::setTestModeEnabled(true);
     }
     const QPalette originalPalette = QApplication::palette();
     ShellTraceWindow window;
+
+    if (testEnglish) {
+        // Regression: only English UI is shown, even with LANG=fr_CH.UTF-8.
+        if (QLocale().language() != QLocale::English) {
+            qCritical() << "ShellTrace GUI locale is not English";
+            return 10;
+        }
+        auto *selector = window.findChild<QComboBox*>("appearance-selector");
+        auto *tabs = window.findChild<QTabWidget*>();
+        const auto buttons = window.findChildren<QPushButton*>();
+        const auto labels = window.findChildren<QLabel*>();
+        auto hasButton = [&buttons](const QString &needle) {
+            for (const auto *button : buttons)
+                if (button->text() == needle) return true;
+            return false;
+        };
+        auto hasLabel = [&labels](const QString &needle) {
+            for (const auto *label : labels)
+                if (label->text() == needle) return true;
+            return false;
+        };
+        if (!selector || selector->itemText(0) != "Dark" ||
+            selector->itemText(1) != "Light" ||
+            selector->itemText(2) != "System" ||
+            !tabs || tabs->tabText(0) != "File changes" ||
+            !hasButton("Start analysis") ||
+            !hasButton("Open JSON report") ||
+            !hasLabel("Understand what your Linux command changes.")) {
+            qCritical() << "Found missing or non-English ShellTrace UI labels";
+            return 11;
+        }
+        qInfo() << "English-only ShellTrace UI verified";
+        return 0;
+    }
 
     if (testContrast) {
         auto *selector = window.findChild<QComboBox*>("appearance-selector");
