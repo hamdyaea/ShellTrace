@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=ShellTrace
+GenericName=Linux command impact inspector
+Comment=Inspect filesystem, process and network effects of Linux commands
+Comment[fr]=Inspecter les changements de fichiers, processus et réseau des commandes Linux
+Exec=shelltrace-gui
+Terminal=false
+Categories=Development;System;Utility;
+Keywords=rust;strace;security;sandbox;linux;
+StartupNotify=true
+Icon=utilities-system-monitor
