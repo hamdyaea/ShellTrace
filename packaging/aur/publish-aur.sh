@@ -5,11 +5,9 @@ root="$(cd "$(dirname "$0")/../.." && pwd)"
 command -v makepkg >/dev/null || { echo 'makepkg is required (Arch Linux / Manjaro).' >&2; exit 1; }
 command -v ssh >/dev/null || { echo 'OpenSSH client required.' >&2; exit 1; }
 command -v git >/dev/null || { echo 'git required.' >&2; exit 1; }
-echo 'Checking SSH authentication to AUR...'
-ssh -T aur@aur.archlinux.org || {
-  echo 'AUR SSH authentication failed. Add your public SSH key to the AUR account.' >&2
-  exit 1
-}
+echo 'Publishing with the SSH key registered in your AUR account.'
+# Some SSH endpoints exit non-zero after displaying the greeting.
+# The git clone below is the actual authentication/authorization check.
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 git -c init.defaultBranch=master clone ssh://aur@aur.archlinux.org/shelltrace-git.git "$tmp/shelltrace-git"
