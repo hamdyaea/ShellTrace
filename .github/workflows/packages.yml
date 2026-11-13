@@ -1,0 +1,80 @@
+name: Linux packages (.deb)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deb:
+    name: Build ${{ matrix.label }} amd64
+    runs-on: ubuntu-latest
+    container: ${{ matrix.image }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { label: debian12, image: 'debian:12' }
+          - { label: debian13, image: 'debian:13' }
+          - { label: ubuntu2404, image: 'ubuntu:24.04' }
+          - { label: ubuntu2604, image: 'ubuntu:26.04' }
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build requirements
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          apt-get update -qq
+          apt-get install -y -qq --no-install-recommends ca-certificates curl git build-essential cmake ninja-build qt6-base-dev dpkg-dev strace bubblewrap
+      - name: Install modern Rust toolchain
+        shell: bash
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+      - name: Build native Debian package
+        shell: bash
+        run: bash packaging/deb/build-deb.sh
+      - name: Verify .deb metadata
+        shell: bash
+        run: |
+          dpkg-deb --contents dist/*.deb
+          dpkg-deb --field dist/*.deb Package Version Architecture Depends
+      - name: Install package and check CLI + headless Qt6
+        shell: bash
+        env:
+          DEBIAN_FRONTEND: noninteractive
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          apt-get install -y ./dist/*.deb
+          shelltrace --version
+          shelltrace-gui --self-test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shelltrace-deb-${{ matrix.label }}-amd64
+          path: dist/*.deb
+          if-no-files-found: error
+          retention-days: 90
+
+  publish:
+    name: Publish v0.3.0 assets to GitHub Releases
+    needs: deb
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, 'release: v0.3.0')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: shelltrace-deb-*-amd64
+          path: dist
+          merge-multiple: true
+      - name: Publish verified Debian/Ubuntu artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          ls -lah dist/
+          gh release create v0.3.0 dist/*.deb --target "$GITHUB_SHA" --title 'ShellTrace v0.3.0' --generate-notes
