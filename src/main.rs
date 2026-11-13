@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 #![cfg(target_os = "linux")]
 
+mod present;
 mod report;
 mod sandbox;
 mod snapshot;
@@ -41,6 +42,12 @@ struct Common {
     /// Hash files up to this size in MiB in each snapshot (default: 16).
     #[arg(long, default_value_t = 16)]
     max_hash_mib: u64,
+    /// Show detailed command events and sandbox setup operations.
+    #[arg(long)]
+    verbose: bool,
+    /// Disable ANSI colors even when stdout is a terminal.
+    #[arg(long)]
+    no_color: bool,
     /// Command and arguments, separated from options by --.
     #[arg(last = true, required = true, num_args = 1..)]
     command: Vec<OsString>,
@@ -60,7 +67,7 @@ struct RunOptions {
 
 #[derive(Args, Debug)]
 struct SandboxOptions {
-    /// Copy this directory into the isolated /work directory before execution.
+    /// Copy this directory into the temporary sandbox working directory before execution.
     #[arg(long)]
     seed: Option<PathBuf>,
     /// Copy the final sandbox workspace to this directory (must not exist).
@@ -174,9 +181,10 @@ fn run_trace(
     let (changes, mut warnings) = compare(&before, &after);
     warnings.extend(before.warnings);
     warnings.extend(after.warnings);
-    let (observations, trace_warnings) = trace::parse_dir(&raw, 20_000);
+    let (observations, trace_warnings) = trace::parse_dir(&raw, 20_000, mode == "sandbox");
     warnings.extend(trace_warnings);
     if mode == "sandbox" {
+        warnings.push("Sandbox origin attribution is conservative: events without a successful target execve are marked unknown".into());
         warnings.push("Bubblewrap reduces host-write exposure, but is NOT a hardened security boundary; the read-only host root remains visible, and namespace support varies".to_string());
         warnings.push(format!("Sandbox snapshot covers only {}; tmpfs writes elsewhere are not included in the filesystem diff", sandbox::SANDBOX_WORKDIR));
     } else {
@@ -188,7 +196,7 @@ fn run_trace(
     }
     let code = status.code().unwrap_or(128 + status.signal().unwrap_or(1));
     let report = Report {
-        schema_version: 1,
+        schema_version: 2,
         mode: mode.to_string(),
         started_at_unix: started,
         duration_ms: elapsed_ms,
@@ -200,7 +208,7 @@ fn run_trace(
         warnings,
         raw_trace_path: common.keep_trace.as_ref().map(|_| raw.display().to_string()),
     };
-    print_summary(&report);
+    present::print_summary(&report, common.verbose, common.no_color);
     if let Some(path) = &common.json {
         let json = serde_json::to_vec_pretty(&report).map_err(|e| format!("JSON serialization: {e}"))?;
         fs::write(path, json).map_err(|e| format!("writing {}: {e}", path.display()))?;
@@ -212,40 +220,6 @@ fn run_trace(
         }
     }
     Ok(code)
-}
-
-fn print_summary(report: &Report) {
-    println!("\nShellTrace v{} | {} | exit={} | {} ms", env!("CARGO_PKG_VERSION"), report.mode, report.exit_code, report.duration_ms);
-    println!("Scope: {}", report.scope);
-    println!("Filesystem diff: {} changes", report.filesystem_changes.len());
-    for change in report.filesystem_changes.iter().take(40) {
-        println!("  {:<16} {} ({})", change.kind, change.path, change.evidence);
-    }
-    if report.filesystem_changes.len() > 40 {
-        println!("  ... {} more in JSON", report.filesystem_changes.len() - 40);
-    }
-    println!(
-        "Syscall observations: {} filesystem operations, {} process events, {} network events, {} sensitive accesses",
-        report.observations.filesystem_operations.len(),
-        report.observations.process_events.len(),
-        report.observations.network_events.len(),
-        report.observations.sensitive_accesses.len()
-    );
-    for event in report.observations.filesystem_operations.iter().take(8) {
-        println!("  FILE pid={} {} {:?} -> {}", event.pid, event.syscall, event.paths, event.result);
-    }
-    for event in report.observations.process_events.iter().filter(|event| event.executable.is_some()).take(8) {
-        println!("  PROCESS pid={} {} {:?} -> {}", event.pid, event.syscall, event.executable, event.result);
-    }
-    for event in report.observations.network_events.iter().take(8) {
-        println!("  NETWORK pid={} {} {} -> {}", event.pid, event.syscall, event.address, event.result);
-    }
-    for event in report.observations.sensitive_accesses.iter().take(8) {
-        println!("  SENSITIVE pid={} {} {} -> {}", event.pid, event.syscall, event.path, event.result);
-    }
-    for warning in report.warnings.iter().take(10) {
-        eprintln!("  WARNING: {warning}");
-    }
 }
 
 use std::os::unix::process::ExitStatusExt;
