@@ -89,9 +89,9 @@ jobs:
           retention-days: 30
 
   publish:
-    name: Publish v0.3.0 assets to GitHub Releases
+    name: Publish v0.3.1 assets to GitHub Releases
     needs: [deb, aur]
-    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[publish-v0.3.0]')
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[publish-v0.3.1]')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -109,4 +109,4 @@ jobs:
         shell: bash
         run: |
           ls -lah dist/
-          gh release create v0.3.0 dist/*.deb --target "$GITHUB_SHA" --title 'ShellTrace v0.3.0' --generate-notes
+          gh release create v0.3.1 dist/*.deb --target "$GITHUB_SHA" --title 'ShellTrace v0.3.1' --generate-notes

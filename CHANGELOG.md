@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.1 — 2026-11-13
+
+- Fix unreadable dark-mode text on Manjaro, where dark backgrounds could retain black text due to Qt stylesheet/palette interactions.
+- Apply explicit high-contrast foreground/background colors to inputs, dropdowns, popups, tabs, tables, header cells, selection states, buttons and status messages.
+- Keep **Dark** as the default and preserve **Light / System** modes, resetting native palette and styles on changes.
+- Add headless Qt6 automated contrast checks (minimum 7:1 text and 4.5:1 selected text) to prevent regressions.
+- Update native Debian/Ubuntu packages and AUR source version for the theme fix.
+
+
 ## 0.3.0 — 2026-11-13
 
 - Adopt the selected shield badge for app window, launcher and GitHub documentation; ship dark/light wordmark variants.

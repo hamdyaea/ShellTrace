@@ -70,3 +70,13 @@ This checks that the Qt interface starts in headless mode. It does not execute a
 ## Appearance
 
 Use the **Dark / Light / System** selector in the top-right corner. **Dark** is the initial default. Your selected mode is persisted using Qt `QSettings` in your user profile; System restores the desktop palette. The selected shield badge is used for the main window and launcher.
+
+## Theme contrast (v0.3.1)
+
+Dark mode now uses explicit colors for text and widget surfaces instead of relying on the previous widget stylesheet's palette values. The main text contrast is approximately **13.8:1** (`#F4F8FF` on `#1D293A`). Dropdown popups, tables, buttons, tooltips and selection states use the same coherent palette. Switching to **System** removes the explicit dark/light color overrides and restores the desktop palette.
+
+Headless CI regression check:
+
+```bash
+QT_QPA_PLATFORM=offscreen ./build/gui/shelltrace-gui --self-test-contrast
+```

@@ -16,7 +16,7 @@ or public assets under [Releases](https://github.com/hamdyaea/ShellTrace/release
 
 Install a package matching your distribution:
 ```bash
-sudo apt install ./shelltrace_0.3.0-1_debian13_amd64.deb
+sudo apt install ./shelltrace_0.3.1-1_debian13_amd64.deb
 shelltrace --version
 shelltrace-gui
 ```

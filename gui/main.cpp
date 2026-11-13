@@ -926,7 +926,7 @@ static double contrastRatio(const QColor &first, const QColor &second) {
 int main(int argc, char **argv) {
     QApplication app(argc, argv);
     app.setApplicationName("ShellTrace");
-    app.setApplicationVersion("0.3.0");
+    app.setApplicationVersion("0.3.1");
     app.setOrganizationName("ShellTrace");
     QApplication::setStyle(QStyleFactory::create("Fusion"));
 
