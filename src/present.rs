@@ -1,7 +1,7 @@
 use crate::report::{FileChange, FileState, Report, ORIGIN_COMMAND, ORIGIN_SANDBOX_SETUP};
 use std::io::{self, IsTerminal};
 
-fn tint<'a>(value: &'a str, color: &'static str, enabled: bool) -> String {
+fn tint(value: &str, color: &'static str, enabled: bool) -> String {
     if enabled { format!("\x1b[{color}m{value}\x1b[0m") } else { value.to_owned() }
 }
 
