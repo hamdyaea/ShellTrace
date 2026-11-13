@@ -906,13 +906,77 @@ private:
     QPlainTextEdit *json_ = nullptr;
 };
 
+// Headless regression test: check the real Qt palette and QSS for text
+// against its surrounding surface, rather than relying only on a compile test.
+static double luminance(const QColor &color) {
+    auto channel = [](double value) {
+        return value <= 0.04045 ? value / 12.92 : std::pow((value + 0.055) / 1.055, 2.4);
+    };
+    return 0.2126 * channel(color.redF()) +
+           0.7152 * channel(color.greenF()) +
+           0.0722 * channel(color.blueF());
+}
+
+static double contrastRatio(const QColor &first, const QColor &second) {
+    const double a = luminance(first);
+    const double b = luminance(second);
+    return (qMax(a, b) + 0.05) / (qMin(a, b) + 0.05);
+}
+
 int main(int argc, char **argv) {
     QApplication app(argc, argv);
     app.setApplicationName("ShellTrace");
     app.setApplicationVersion("0.3.0");
     app.setOrganizationName("ShellTrace");
     QApplication::setStyle(QStyleFactory::create("Fusion"));
+
+    const bool testContrast = app.arguments().contains("--self-test-contrast");
+    if (testContrast) {
+        QStandardPaths::setTestModeEnabled(true);
+    }
+    const QPalette originalPalette = QApplication::palette();
     ShellTraceWindow window;
+
+    if (testContrast) {
+        auto *selector = window.findChild<QComboBox*>("appearance-selector");
+        if (!selector) {
+            qCritical() << "Missing appearance selector";
+            return 1;
+        }
+        for (const auto &mode : {"dark", "light"}) {
+            const int index = selector->findData(mode);
+            if (index < 0) return 2;
+            selector->setCurrentIndex(index);
+            QApplication::processEvents();
+            const auto p = QApplication::palette();
+            const double normal = contrastRatio(p.color(QPalette::Text), p.color(QPalette::Base));
+            const double labels = contrastRatio(p.color(QPalette::WindowText), p.color(QPalette::Window));
+            const double buttons = contrastRatio(p.color(QPalette::ButtonText), p.color(QPalette::Button));
+            const double selected = contrastRatio(p.color(QPalette::HighlightedText), p.color(QPalette::Highlight));
+            const QString css = QApplication::styleSheet();
+            qInfo() << "Contrast test" << mode << normal << labels << buttons << selected;
+            if (normal < 7.0 || labels < 7.0 || buttons < 7.0 || selected < 4.5) {
+                qCritical() << "Insufficient text contrast in" << mode;
+                return 3;
+            }
+            if (!css.contains("QComboBox QAbstractItemView") ||
+                !css.contains("QTableWidget::item:selected") ||
+                css.contains("@FG@") || css.contains("@SURFACE@")) {
+                qCritical() << "Incomplete theme stylesheet for" << mode;
+                return 4;
+            }
+        }
+        const int system = selector->findData("system");
+        selector->setCurrentIndex(system);
+        QApplication::processEvents();
+        if (QApplication::palette().color(QPalette::Text) != originalPalette.color(QPalette::Text) ||
+            QApplication::palette().color(QPalette::Base) != originalPalette.color(QPalette::Base)) {
+            qCritical() << "System theme did not restore the original Qt palette";
+            return 5;
+        }
+        qInfo() << "Dark, Light and System theme contrast checks passed";
+        return 0;
+    }
     if (app.arguments().contains("--self-test")) {
         // Smoke test: construct all widgets without running any commands.
         return 0;
