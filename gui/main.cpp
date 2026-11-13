@@ -916,7 +916,7 @@ int main(int argc, char **argv) {
     QLocale::setDefault(QLocale(QLocale::English, QLocale::UnitedStates));
     QApplication app(argc, argv);
     app.setApplicationName("ShellTrace");
-    app.setApplicationVersion("0.3.1");
+    app.setApplicationVersion("0.3.2");
     app.setOrganizationName("ShellTrace");
     QApplication::setStyle(QStyleFactory::create("Fusion"));
 

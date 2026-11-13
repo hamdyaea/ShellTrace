@@ -57,7 +57,7 @@ You can later uninstall with `bash scripts/install-gui.sh --uninstall`.
 
 Appearance: **Dark (default)**, **Light**, or **System**, selectable in the top-right menu. The preference is remembered between sessions. The selected shield badge is used in the window and application launcher.
 
-The GUI defaults to **Sandbox** and requires confirmation before executing a command on the real host. It supports English and French automatically based on the system locale. See [Qt6 GUI documentation](gui/README.md).
+The GUI defaults to **Sandbox** and requires confirmation before executing a command on the real host. The GUI is **English-only**, regardless of Linux locale. Commands being inspected keep their original locale to preserve observed behavior. See [Qt6 GUI documentation](gui/README.md).
 
 ## Installation
 

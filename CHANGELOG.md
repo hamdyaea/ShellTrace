@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.2 — 2026-11-13
+
+- Remove all 99 bilingual Qt6 UI labels and ensure English-only menus, fields, tabs, prompts, status messages and warnings.
+- Use English Qt dialogs rather than localized native file dialogs.
+- Force English Qt UI locale even when the Linux desktop locale is French or another language; do not alter the environment of traced commands.
+- Remove the French locale-specific Desktop Entry comment (the launcher description is English).
+- Add automated English UI smoke checks, including when LANG is set to fr_CH.UTF-8.
+- Rebuild the Debian/Ubuntu and Arch Linux packages with these changes.
+
+
 ## 0.3.1 — 2026-11-13
 
 - Fix unreadable dark-mode text on Manjaro, where dark backgrounds could retain black text due to Qt stylesheet/palette interactions.

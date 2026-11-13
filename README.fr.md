@@ -15,7 +15,7 @@ ShellTrace est un outil CLI écrit en Rust et distribué sous licence **GPLv3 ou
 
 ## Interface graphique Qt6
 
-ShellTrace inclut une **interface native Qt6 Widgets**, disponible séparément du moteur Rust. Elle propose le mode sandbox par défaut, une confirmation obligatoire pour le mode hôte, des tableaux et filtres, un tableau de bord, ainsi que l'ouverture et l'enregistrement de rapports JSON. L'interface est en français ou en anglais selon la langue du système.
+ShellTrace inclut une **interface native Qt6 Widgets**, disponible séparément du moteur Rust. Elle propose le mode sandbox par défaut, une confirmation obligatoire pour le mode hôte, des tableaux et filtres, un tableau de bord, ainsi que l'ouverture et l'enregistrement de rapports JSON. L'interface du programme est désormais **uniquement en anglais**, indépendamment de la langue du système. Cette documentation française reste disponible séparément.
 
 Sur Manjaro :
 

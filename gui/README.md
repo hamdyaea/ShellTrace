@@ -11,7 +11,7 @@ Native **Qt6 Widgets** desktop interface for the **Rust ShellTrace engine**. The
 - File syscall, process, network, and sensitive path views.
 - Filter command vs Bubblewrap setup vs unclassified events, plus text search.
 - View log, open existing JSON, and save a JSON report.
-- French or English UI based on desktop locale.
+- **English-only UI**, independent of the desktop language and locale.
 
 ## Arch Linux / Manjaro / CachyOS
 
@@ -79,4 +79,14 @@ Headless CI regression check:
 
 ```bash
 QT_QPA_PLATFORM=offscreen ./build/gui/shelltrace-gui --self-test-contrast
+```
+
+## English-only interface (v0.3.2)
+
+All ShellTrace-owned Qt6 labels, menus, warnings, dialogs and status messages are presented in **English**, regardless of the operating system language. Native file chooser dialogs are disabled in favor of the Qt dialogs to avoid host-localized button text. The GUI sets Qt's default locale to English, without changing the locale of the command being traced: the command's own stdout/stderr may still appear in the language selected by that command or by the host.
+
+Regression check (also run in CI with `LANG=fr_CH.UTF-8`):
+
+```bash
+QT_QPA_PLATFORM=offscreen LANG=fr_CH.UTF-8 ./build/gui/shelltrace-gui --self-test-english
 ```

@@ -18,6 +18,7 @@ cargo build --release --locked
 cmake -S gui -B build/gui -DCMAKE_BUILD_TYPE=Release
 cmake --build build/gui --parallel
 QT_QPA_PLATFORM=offscreen ./build/gui/shelltrace-gui --self-test
+QT_QPA_PLATFORM=offscreen LANG=fr_CH.UTF-8 ./build/gui/shelltrace-gui --self-test-english
 
 root="$(mktemp -d)"
 trap 'rm -rf "$root"' EXIT

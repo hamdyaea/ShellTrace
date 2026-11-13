@@ -46,3 +46,4 @@ jobs:
         run: |
           ./build/gui/shelltrace-gui --self-test
           ./build/gui/shelltrace-gui --self-test-contrast
+          LANG=fr_CH.UTF-8 ./build/gui/shelltrace-gui --self-test-english
