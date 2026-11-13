@@ -39,6 +39,8 @@ namespace {
 QString locateEngine() {
     const QString dir = QCoreApplication::applicationDirPath();
     const QStringList candidates = {
+        // User-local and system installations place both binaries together.
+        dir + "/shelltrace",
         dir + "/../../target/release/shelltrace",
         dir + "/../target/release/shelltrace",
         QDir::currentPath() + "/target/release/shelltrace",
