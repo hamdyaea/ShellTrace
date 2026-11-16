@@ -18,6 +18,18 @@
 - **`run` — observe on the actual host.** The command runs with your normal privileges and can **modify the host**. Before/after comparisons cover a directory you choose, while tracing can reveal paths referenced outside it.
 - **`sandbox` — trial execution using Bubblewrap.** Runs in a separate namespace, with a read-only bind of the host root, a writable ephemeral `/tmp/shelltrace-work`, no shared network namespace, and masked home/runtime mount points. Not a hardened security boundary or a guarantee against all side effects.
 
+## Engineering highlights
+
+For engineers and hiring teams evaluating this project:
+
+- **Rust systems programming:** command execution, filesystem inspection and syscall-level observations.
+- **Linux security engineering:** compares observed changes and explains the distinction between traced attempts and confirmed filesystem differences.
+- **Safety-conscious design:** documents host execution risks and the limits of Bubblewrap isolation rather than promising complete containment.
+- **Maintainability:** explicit evidence model, CI checks and reproducible command-line workflows.
+
+The sections below describe exact capabilities, usage and security boundaries.
+
+
 ## What ShellTrace reports
 
 | Signal | Method | Evidence and caveats |
